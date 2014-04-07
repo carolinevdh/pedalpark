@@ -43,8 +43,9 @@ def update_db():
 		    end_of_data = True
 
 	prepare_db_for_geo(mongo.db.parkings)	    
+	import_size -= prune_db(mongo.db.parkings)
 
-	print "%d bike parkings imported." % (import_size)
+	print "%d installed bike parkings imported." % (import_size)
 	return render_template('start.html')
  
 def insert_into_db(c,item):
@@ -53,6 +54,13 @@ def insert_into_db(c,item):
 		return len(item)
 	except:
 		print "Unexpected error when inserting into db:", sys.exc_info()
+
+def prune_db(c):
+	"""Remove all uninstalled bike parkings from database"""
+	before = c.count()
+	c.remove({'status_detail': {'$ne': "INSTALLED"}})
+	after = c.count()
+	return before - after
 
 def prepare_db_for_geo(c):
 	"""Remove coordinates attribute and create index for MongoDB GeoSpatial Indexing"""
