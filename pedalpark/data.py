@@ -1,12 +1,12 @@
-from flask import Flask, render_template, request
+from pedalpark import app
 from flask.ext.pymongo import PyMongo
-from pymongo import GEO2D
 import requests
+from flask import render_template
 import sys
+from pymongo import GEO2D
 
-app = Flask(__name__)
+""" All data persistence methods """
 
-""" ~ Database methods ~ """
 mongo = PyMongo(app)
 
 def empty_db(c):
@@ -14,7 +14,7 @@ def empty_db(c):
 	c.remove()
 	c.drop_indexes()
 
-@app.route('/db/update')
+@app.route('/update')
 def update_db():
 	empty_db(mongo.db.parkings)	
 	print "Removed all known bike parkings."
@@ -63,12 +63,3 @@ def cast_latlong(item):
     """MongoDB GeoSpatial Indexing requires float values of latitude and longitude"""
     item["coordinates"]["latitude"] = float(item["coordinates"]["latitude"])
     item["coordinates"]["longitude"] = float(item["coordinates"]["longitude"])
-
-
-""" ~ Pages ~ """
-@app.route('/')
-def home():
-	return render_template('start.html')
-
-if __name__ == '__main__':
-	app.run()
