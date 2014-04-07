@@ -1,0 +1,9 @@
+{% extends "layout.html" %}
+{% block body %}
+<h2>Bike Parkings near {{ source }}</h2>
+<ul>
+{% for parking in parkings %}
+	<li>{{ parking.location_name }}</li>
+{% endfor %}
+</ul>
+{% endblock %}

@@ -1,5 +1,4 @@
-from pedalpark import app
-from flask.ext.pymongo import PyMongo
+from pedalpark import app, mongo
 import requests
 from flask import render_template
 import sys
@@ -7,7 +6,13 @@ from pymongo import GEO2D
 
 """ All data persistence methods """
 
-mongo = PyMongo(app)
+def coll():
+	"""Return collection used"""
+	return mongo.db.parkings
+
+def geo_find_db(c,attr,latitude,longitude,count):
+	"""Perform GeoSpatial search, based on (lat,long) coordinate"""
+	return c.find({attr: {'$near': [latitude,longitude]}}).limit(count)
 
 def empty_db(c):
 	"""Remove all data and indexes from collection"""
@@ -16,7 +21,7 @@ def empty_db(c):
 
 @app.route('/update')
 def update_db():
-	empty_db(mongo.db.parkings)	
+	empty_db(coll())	
 	print "Removed all known bike parkings."
 
 	"""Fill DB with entries from paginated API"""
@@ -36,14 +41,14 @@ def update_db():
 		if resp_size > 0:
 		    for resp_item in resp_json: cast_latlong(resp_item)
 		    print "Casted all latitude and longitude fields."
-		    import_size += insert_into_db(mongo.db.parkings,resp_json)
+		    import_size += insert_into_db(coll(),resp_json)
 		    offset += pagesize
 		    print "Importing... %d bike parkings so far." % import_size
 		else:
 		    end_of_data = True
 
-	prepare_db_for_geo(mongo.db.parkings)	    
-	import_size -= prune_db(mongo.db.parkings)
+	prepare_db_for_geo(coll())	    
+	import_size -= prune_db(coll())
 
 	print "%d installed bike parkings imported." % (import_size)
 	return render_template('start.html')
