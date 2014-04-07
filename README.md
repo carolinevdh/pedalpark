@@ -24,6 +24,15 @@ Finding the nearest bike parking can be done by:
 
 **`/near?lat=37.790947&long=-122.393171&limit=3`** finds the 3 bike parkings closest to the given (lat,long) location.
 
+### Using
+
+Server-side
+
+- **MongoDB**, for data caching and Geospatial search of nearest neighbours based on (lat,long).
+- **pygeocoder**, a python library easing the usage of Google's Geocoding API.
+- **Flask**, for templating and its WSGI container
+- **Flask-PyMongo**, for having MongoDB play nice in the Flask code.
+
 ---
 
 Todo
