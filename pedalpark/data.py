@@ -1,14 +1,15 @@
-from pedalpark import app
+from pedalpark import app, db
 import requests
 from flask import render_template
 import sys
 from pymongo import GEO2D
 
+
 """ All data persistence methods """
 
 def coll():
-	"""Return collection used"""
-	#return mongo.db.parkings
+	"""Define collection once, use coll() in rest of code"""
+	return db.parkings
 
 def geo_find_db(c,attr,latitude,longitude,count):
 	"""Perform GeoSpatial search, based on (lat,long) coordinate"""

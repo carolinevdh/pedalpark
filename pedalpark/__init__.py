@@ -1,7 +1,7 @@
 import os
 from flask import Flask
-import pymongo
 from urlparse import urlparse
+import pymongo
 
 """Connect to the MongoDB database"""
 MONGO_URL = os.environ.get('MONGOHQ_URL')
@@ -15,13 +15,7 @@ else:
 	connection = pymongo.Connection('localhost',27017)
 	db = connection['pedalpark']
 
-
 app = Flask(__name__)
-
-@app.route('/')
-def hello():
-    db.test.insert({"test":7})
-    return str(db.test.count())
 
 import pedalpark.views
 import pedalpark.data
