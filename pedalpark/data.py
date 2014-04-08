@@ -1,4 +1,4 @@
-from pedalpark import app, mongo
+from pedalpark import app
 import requests
 from flask import render_template
 import sys
@@ -8,7 +8,7 @@ from pymongo import GEO2D
 
 def coll():
 	"""Return collection used"""
-	return mongo.db.parkings
+	#return mongo.db.parkings
 
 def geo_find_db(c,attr,latitude,longitude,count):
 	"""Perform GeoSpatial search, based on (lat,long) coordinate"""
