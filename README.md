@@ -16,11 +16,12 @@ Finding the nearest bike parking can be done by:
 ##Roll your own PedalPark
 
  1. Start a MongoDB server on port `27017` or specify port in [`pedalpark/__init__.py`][3].
+ 2. Make `pedalpark` your current MongoDB, through `use pedalpark` in the mongo shell. You can change `pedalpark` in [`pedalpark/__init__.py`][3] as well.
  2. Start a Python server by running `python runserver.py` or `gunicorn pedalpark:app`.
 
 ##PedalPark API call examples
 
-**`/update`** populates a the localhost MongoDB `pedalpark` with bike parkings.
+**`/update`** populates a MongoDB with bike parkings.
 
 **`/near?lat=37.790947&long=-122.393171&limit=3`** finds the 3 bike parkings closest to the given (lat,long) location.
 
@@ -42,6 +43,8 @@ Todo
  - ensure seperation of server and client
  - handle requests with wrong or empty parameters
  - loading screen for /update
+ - build kick-ass front-end
+ - clean up data received from SF 311
 
 
   [1]: https://data.sfgov.org/Transportation/Bicycle-Parking-Public-/w969-5mn4
