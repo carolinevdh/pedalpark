@@ -1,6 +1,7 @@
 from pedalpark import app, data
-from flask import request, render_template
+from flask import request, jsonify
 from pygeocoder import Geocoder
+from bson import json_util
 
 """ All location related methods """
 
@@ -11,19 +12,19 @@ def near():
 	if 'limit' in args: limit = int(args.get('limit'))
 	if 'lat' in args and 'long' in args:
 		la = float(args.get('lat'))
-		lo = float(args.get('long'))	
-		source_str = la, lo
+		lo = float(args.get('long'))
 	elif 'address' in args:
 		address = args.get('address')
-		source_str = address
 		coordinates = latlong_from_address(address)
 		la = coordinates[0]
 		lo = coordinates[1]
 	else:
-		return render_template('locations.html',source="nowhere", parkings=[]) 	
+		return jsonify(success=False)
 
 	locations = find_nearest_neighbours(la,lo,limit)
-	return render_template('locations.html',source=source_str, parkings=locations)
+	locations_json = []
+	for location in locations: locations_json.append(json_util.dumps(location))
+	return jsonify(success=True,locations=locations_json)
 
 def find_nearest_neighbours(latitude,longitude,count):
 	neighbours = data.geo_find_db(data.coll(),'coordinates',latitude,longitude,count)

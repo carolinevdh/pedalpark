@@ -1,8 +1,8 @@
 from pedalpark import app, db
 import requests
-from flask import render_template
 import sys
 from pymongo import GEO2D
+from flask import jsonify
 
 
 """ All data persistence methods """
@@ -52,7 +52,7 @@ def update_db():
 	import_size -= prune_db(coll())
 
 	print "%d installed bike parkings imported." % (import_size)
-	return render_template('start.html')
+	return jsonify(database_size=import_size)
  
 def insert_into_db(c,item):
 	try:
