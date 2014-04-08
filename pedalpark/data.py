@@ -66,6 +66,11 @@ def prune_db(c):
 	before = c.count()
 	c.remove({'status_detail': {'$ne': "INSTALLED"}})
 	after = c.count()
+
+	"""Remove document attributes we don't need"""
+	fields_to_remove = ['status','racks_installed','status_description','acting_agent', \
+						'action','installed_by_2','yr_inst','yr_installed','spaces','racks']
+	for field in fields_to_remove: c.update({},{'$unset': {field:1}}, multi=True)
 	return before - after
 
 def prepare_db_for_geo(c):
