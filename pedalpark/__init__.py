@@ -1,5 +1,5 @@
 import os
-from flask import Flask
+from flask import Flask, render_template
 from urlparse import urlparse
 import pymongo
 
@@ -17,6 +17,9 @@ else:
 
 app = Flask(__name__)
 
-import pedalpark.views
+@app.route('/')
+def home():
+	return render_template('body_start.html')
+
 import pedalpark.data
 import pedalpark.location

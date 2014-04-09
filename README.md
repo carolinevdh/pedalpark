@@ -21,7 +21,9 @@ The live production environment, **Heroku**, was also entirely new to me.
 
 ###Front-end
 
-{insert front-end technologies}
+- **Foundation** (no previous experience), for mobile-first design, because cyclists carry small screens.
+
+{insert more front-end technologies}
 
 ###Data
 All data is provided by [San Francisco 311][1] through their SODA API url at `http://data.sfgov.org/resource/w969-5mn4.json`
