@@ -18,8 +18,9 @@ else:
 app = Flask(__name__)
 
 @app.route('/')
-def home():
-	return render_template('body_start.html')
+def index():
+	print "/ route in __init__.py"
+	return render_template('index.html')
 
 import pedalpark.data
 import pedalpark.location

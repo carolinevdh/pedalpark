@@ -22,8 +22,8 @@ The live production environment, **Heroku**, was also entirely new to me.
 ###Front-end
 
 - **Foundation** (no previous experience), for mobile-first design, because cyclists carry small screens.
-
-{insert more front-end technologies}
+- **Backbone.js** (no previous experience), for clean MVC software design.
+- **Underscore** (no previous experience), for its templating engine.
 
 ###Data
 All data is provided by [San Francisco 311][1] through their SODA API url at `http://data.sfgov.org/resource/w969-5mn4.json`
@@ -59,11 +59,9 @@ Finding the nearest bike parking can be done by:
 
 Todo
 
- - ensure seperation of server and client
+ - move Backbone MVC's into seperate files
  - handle requests with wrong or empty parameters
  - loading screen for /update
- - build kick-ass front-end
- - clean up data received from SF 311
 
 
   [1]: https://data.sfgov.org/Transportation/Bicycle-Parking-Public-/w969-5mn4
