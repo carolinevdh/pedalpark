@@ -1,10 +1,14 @@
 (function() {
 	var TEMPLATE_URL = '/static';
 
+	//These variables help development when not in San Francisco, CA.
+	var FAKE_SF_LOCATION = false;
+	var SF_LOCATION_LAT = 37.790947;
+	var SF_LOCATION_LONG = -122.393171;
+
 	// Start PedalPark Backbone App
 	window.PedalParkApp = Backbone.View.extend({
 		initialize: function() {
-			console.log('Starting ParkingsRouter.');
 			parkingsRouter = new ParkingsRouter();
 		}
 	});
@@ -19,13 +23,25 @@
 
 	var UserLocationModel = Backbone.Model.extend({
 		initialize: function() {
-			_.bindAll(this,'positionSuccess');
+			_.bindAll(this,'positionSuccess','updateLocation');
+			this.set({
+				latitude : -1,
+				longitude : -1
+			});
 			this.updateLocation();
 		},
 
 		updateLocation: function() {
-			if(navigator.geolocation){
-				navigator.geolocation.getCurrentPosition(this.positionSuccess);
+			if(!FAKE_SF_LOCATION){
+				if(navigator.geolocation)
+					navigator.geolocation.getCurrentPosition(this.positionSuccess);
+			}else{
+				console.log(this);
+				this.set({
+					latitude : SF_LOCATION_LAT,
+					longitude : SF_LOCATION_LONG
+				});
+				console.log('Set fake position at (' + this.get('latitude') + ", " + this.get('longitude') + ').');
 			}
 		},
 
@@ -66,14 +82,24 @@
 				mapTypeId: google.maps.MapTypeId.ROADMAP
 			};
 		},
-		updateLocation: function(lat, long){
+		update: function(lat, long, parkinglocations){
 			//Build Google Map for drawing
 			mapOptions = this.getMapOptions(lat,long);
 			map = new google.maps.Map(this.el,mapOptions);
-			marker = new google.maps.Marker({
+			currentMarker = new google.maps.Marker({
 				position: mapOptions.center,
 				map: map,
 			});
+			console.log(parkinglocations);
+			for ( i = 0; i < parkinglocations.length; i++ ){
+				console.log(parkinglocations[i]);
+				parkingMarker = new google.maps.Marker({
+					position: new google.maps.LatLng(
+						parkinglocations[i].coordinates.latitude,
+						parkinglocations[i].coordinates.longitude),
+					map: map
+				});
+			}
 			bikeLayer = new google.maps.BicyclingLayer();
 			bikeLayer.setMap(map);
 
@@ -98,6 +124,7 @@
 
 	var ParkingsRouter = Backbone.Router.extend({
 		initialize: function() {
+			_.bindAll(this,'onLocationUpdate','parkingFetchSuccess');
 			this.userLocationModel = new UserLocationModel();
 			this.bikeParkingsModel = new BikeParkingsModel();
 			this.bikeParkingsView = new BikeParkingsView({
@@ -109,14 +136,26 @@
 		},
 
 		onLocationUpdate: function(model){
+			//Fetch new bike parkings
 			this.bikeParkingsModel.fetch({
 				data : {
-					lat : model.attributes.latitude,
-					long : model.attributes.longitude,
+					lat : model.get('latitude'),
+					long : model.get('longitude'),
 					limit : 4
-				}
+				},
+				success : this.parkingFetchSuccess
 			});
-			this.mapView.updateLocation(model.attributes.latitude, model.attributes.longitude);
+		},
+
+		parkingFetchSuccess: function(){
+			console.log('Successfully fetched bikeparkings');
+
+			//Update Google Map with new current location
+			this.mapView.update(
+				this.userLocationModel.get('latitude'),
+				this.userLocationModel.get('longitude'),
+				this.bikeParkingsModel.get('locations')
+			);
 		}
 	});
 

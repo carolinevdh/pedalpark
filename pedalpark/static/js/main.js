@@ -30,7 +30,6 @@ define('gmaps', ['async!http://maps.googleapis.com/maps/api/js?sensor=false'], f
 });
 
 define(['jquery', 'underscore', 'backbone', 'foundation', 'pedalpark','gmaps'], function() {
-	console.log('Using Backbone...');
     $(document).foundation({});
     $(document).ready(function() {
         window.App = new PedalParkApp({ appendTo: $('body') });

@@ -15,7 +15,6 @@
 		<!-- bike parkings template -->
 		<script type="text/html" id="bikeparkings-template">
 			<% _.each(bikeparkings.locations, function (parking, index) { %>
-				<% console.log(parking) %>
 				<% if (index % 2 == 0) { %>
 					<div class="row">
 				<% } %>
@@ -79,7 +78,7 @@
 		</div>
 
 		<br />
-		
+
 		<!-- Insertion of bike parkings -->
 		<div class="row" id="bikeparkings"></div>
 
