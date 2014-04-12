@@ -4,6 +4,7 @@ require.config({
 		foundation : 'vendor/foundation',
 		underscore : 'vendor/underscore',
 		backbone : 'vendor/backbone',
+		async : 'vendor/async',
 		pedalpark : 'pedalpark'
 	},
 	shim: {
@@ -24,7 +25,11 @@ require.config({
 
 });
 
-define(['jquery', 'underscore', 'backbone', 'foundation', 'pedalpark'], function() {
+define('gmaps', ['async!http://maps.googleapis.com/maps/api/js?sensor=false'], function() {
+    return google.maps;
+});
+
+define(['jquery', 'underscore', 'backbone', 'foundation', 'pedalpark','gmaps'], function() {
 	console.log('Using Backbone...');
     $(document).foundation({});
     $(document).ready(function() {

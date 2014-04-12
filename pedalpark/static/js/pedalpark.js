@@ -6,6 +6,7 @@
 		initialize: function() {
 			console.log('Starting ParkingsRouter.');
 			parkingsRouter = new ParkingsRouter();
+			mapsView = new MapsView();
 		}
 	});
 
@@ -51,6 +52,22 @@
 		},
 		render: function(){
 			this.$el.html(this.template({ bikeparkings: this.model.toJSON() }));
+		}
+	});
+
+	var MapsView = Backbone.View.extend({
+		el : $('#map-canvas').first(),
+		initialize: function(){
+			var mapOptions = {
+				zoom: 8,
+				center: new google.maps.LatLng(-34.397, 150.644),
+				mapTypeId: google.maps.MapTypeId.ROADMAP
+			};
+			this.map = new google.maps.Map(this.el,mapOptions);
+			this.render();
+		},
+		render: function(){
+			return this;
 		}
 	});
 
