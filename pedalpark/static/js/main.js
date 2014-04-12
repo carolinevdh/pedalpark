@@ -25,6 +25,7 @@ require.config({
 });
 
 define(['jquery', 'underscore', 'backbone', 'foundation', 'pedalpark'], function() {
+	console.log('Using Backbone...');
     $(document).foundation({});
     $(document).ready(function() {
         window.App = new PedalParkApp({ appendTo: $('body') });

@@ -4,6 +4,7 @@
 	// Start PedalPark Backbone App
 	window.PedalParkApp = Backbone.View.extend({
 		initialize: function() {
+			console.log('Starting ParkingsRouter.');
 			parkingsRouter = new ParkingsRouter();
 		}
 	});
