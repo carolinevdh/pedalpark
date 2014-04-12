@@ -67,6 +67,7 @@
 			};
 		},
 		updateLocation: function(lat, long){
+			//Build Google Map for drawing
 			mapOptions = this.getMapOptions(lat,long);
 			map = new google.maps.Map(this.el,mapOptions);
 			marker = new google.maps.Marker({
@@ -75,6 +76,20 @@
 			});
 			bikeLayer = new google.maps.BicyclingLayer();
 			bikeLayer.setMap(map);
+
+			//Listen to resize events: make Google Map responsive
+			var center;
+			function calculateCenter() {
+				center = map.getCenter();
+			}
+			google.maps.event.addDomListener(map, 'idle', function() {
+				calculateCenter();
+			});
+			google.maps.event.addDomListener(window, 'resize', function() {
+				map.setCenter(center);
+			});
+
+			//Finally, draw Google Map
 			this.render();
 		}
 	});
