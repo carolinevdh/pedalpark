@@ -6,7 +6,6 @@
 		initialize: function() {
 			console.log('Starting ParkingsRouter.');
 			parkingsRouter = new ParkingsRouter();
-			mapsView = new MapsView();
 		}
 	});
 
@@ -55,19 +54,28 @@
 		}
 	});
 
-	var MapsView = Backbone.View.extend({
+	var MapView = Backbone.View.extend({
 		el : $('#map-canvas').first(),
-		initialize: function(){
-			var mapOptions = {
-				zoom: 8,
-				center: new google.maps.LatLng(-34.397, 150.644),
-				mapTypeId: google.maps.MapTypeId.ROADMAP
-			};
-			this.map = new google.maps.Map(this.el,mapOptions);
-			this.render();
-		},
 		render: function(){
 			return this;
+		},
+		getMapOptions: function(lat, long){
+			return mapOptions = {
+				zoom: 15,
+				center: new google.maps.LatLng(lat,long),
+				mapTypeId: google.maps.MapTypeId.ROADMAP
+			};
+		},
+		updateLocation: function(lat, long){
+			mapOptions = this.getMapOptions(lat,long);
+			map = new google.maps.Map(this.el,mapOptions);
+			marker = new google.maps.Marker({
+				position: mapOptions.center,
+				map: map,
+			});
+			bikeLayer = new google.maps.BicyclingLayer();
+			bikeLayer.setMap(map);
+			this.render();
 		}
 	});
 
@@ -81,6 +89,7 @@
 				el: $('#bikeparkings').first(),
 				model: this.bikeParkingsModel
 			});
+			this.mapView = new MapView();
 			this.listenTo(this.userLocationModel, 'change', this.onLocationUpdate);
 		},
 
@@ -92,6 +101,7 @@
 					limit : 4
 				}
 			});
+			this.mapView.updateLocation(model.attributes.latitude, model.attributes.longitude);
 		}
 	});
 
