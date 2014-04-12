@@ -4,13 +4,40 @@
 	    <title>PedalPark</title>
 	    <link href="../static/css/foundation.min.css" media="all" rel="stylesheet" type="text/css"/>
 	    <script data-main="../static/js/main" src="../static/js/vendor/require.js"></script>
-	    <!-- on Flask?: <script data-main="js/core" src="{{ url_for('static',filename='js/vendor/require.min.js')}}" /> -->
+
+		<!-- bike parkings template -->
+		<script type="text/html" id="bikeparkings-template">
+			<% _.each(bikeparkings.locations, function (parking, index) { %>
+				<% console.log(parking) %>
+				<% if (index % 2 == 0) { %>
+					<div class="row">
+				<% } %>
+				<div class="large-6 columns">
+					<div class="callout panel clearfix">
+						<div class="small-9 columns">
+							<%= parking.location_name %>
+							<br />
+							<% if (parking.yr_inst && parking.yr_inst.toLowerCase() != 'none') { %>
+								<%= parking.yr_inst %>
+								<br />
+							<% } %>
+							it&#39;s a <%= parking.placement.toLowerCase() %> <%= parking.bike_parking.toLowerCase() %>
+						</div>
+						<div class="small-3 columns"> 
+							<a href="#" class="tiny round button">Go</a>
+						</div>
+					</div>
+				</div>
+				<% if (index % 2 != 0) { %>
+					</div>
+				<% } %>
+			<% }); %>
+		</script>
 
 	</head>
 	<body>
 
 		<!-- Header and Nav -->
-
 		<div class="row">
 			<div class="small-3 columns">
 				<h1>PedalPark</h1>
@@ -23,20 +50,7 @@
 			</div>
 		</div>
 
-		<!-- Notifications -->
-		<!--
-		<div class="row">
-			<div class="large-12 columns">
-				<div data-alert class="alert-box warning radius">
-					Please allow PedalPark to get your current location, in case your browser asks.
-					<a href="#" class="close">&times;</a>
-				</div>
-			</div>
-		</div>
-		-->
-
 		<!-- Google Maps -->
-
 		<div class="row">
 			<div class="large-12 columns">
 				<div class="callout panel">
@@ -58,56 +72,10 @@
 			</form>
 		</div>-->
 
-		<!-- Bike Parkings -->
-
-		<!--<div class="row">
-
-			<div class="large-6 columns">
-				<div class="callout panel clearfix">
-					<div class="small-3 columns">
-						Name
-						<br/>
-						Address
-					</div>
-					<div class="small-3 columns">
-						Rack <br/>
-						Sidewalk
-					</div>
-					<div class="small-3 columns">
-						5 mins <br/>
-						1 mile
-					</div>
-					<div class="small-3 columns"> 
-						<a href="#" class="tiny round button">Go</a>
-					</div>
-				</div>
-			</div>
-
-			<div class="large-6 columns">
-				<div class="callout panel clearfix">
-					<div class="small-3 columns">
-						Name
-						<br/>
-						Address
-					</div>
-					<div class="small-3 columns">
-						Rack <br/>
-						Sidewalk
-					</div>
-					<div class="small-3 columns">
-						5 mins <br/>
-						1 mile
-					</div>
-					<div class="small-3 columns"> 
-						<a href="#" class="tiny round button">Go</a>
-					</div>
-				</div>
-			</div>
-
-		</div>-->
+		<!-- Insertion of bike parkings -->
+		<div class="row" id="bikeparkings"></div>
 
 		<!-- Footer -->
-
 		<footer class="row">
 			<div class="large-12 columns">
 				<hr />

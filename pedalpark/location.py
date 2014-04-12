@@ -22,9 +22,7 @@ def near():
 		return jsonify(success=False)
 
 	locations = find_nearest_neighbours(la,lo,limit)
-	locations_json = []
-	for location in locations: locations_json.append(json_util.dumps(location))
-	return jsonify(success=True,locations=locations_json)
+	return json_util.dumps({ 'success': True, 'locations': locations })
 
 def find_nearest_neighbours(latitude,longitude,count):
 	neighbours = data.geo_find_db(data.coll(),'coordinates',latitude,longitude,count)

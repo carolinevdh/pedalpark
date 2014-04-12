@@ -19,7 +19,6 @@ app = Flask(__name__)
 
 @app.route('/')
 def index():
-	print "/ route in __init__.py"
 	return render_template('index.html')
 
 import pedalpark.data

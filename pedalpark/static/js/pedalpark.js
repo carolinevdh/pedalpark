@@ -1,22 +1,28 @@
 (function() {
 	var TEMPLATE_URL = '/static';
 
-	// USER LOCATION
+	// Start PedalPark Backbone App
+	window.PedalParkApp = Backbone.View.extend({
+		initialize: function() {
+			parkingsRouter = new ParkingsRouter();
+		}
+	});
 
-	// - model
+	// - MODEL
+
+	var BikeParkingsModel = Backbone.Model.extend({
+		url: function() {
+			return '/near';
+		}
+	});
 
 	var UserLocationModel = Backbone.Model.extend({
-		defaults: {
-			latitude: -1,
-			longitude: -1
-		},
-
 		initialize: function() {
 			_.bindAll(this,'positionSuccess');
+			this.updateLocation();
 		},
 
-		getLocation: function() {
-			console.log('UserLocationModel.getLocation() called.');
+		updateLocation: function() {
 			if(navigator.geolocation){
 				navigator.geolocation.getCurrentPosition(this.positionSuccess);
 			}
@@ -31,34 +37,43 @@
 		},
 
 		positionFailure: function() {
-			console.log('ERROR: Could not acquire new position, still: (' + this.latitude + ", " + this.longitude + ').');
+			console.log('ERROR: Could not acquire new position, still: (' + this.get('latitude') + ", " + this.get('longitude') + ').');
 		}
 	});
 
-	// - view
+	// - VIEW
 
-	var UserLocationView = Backbone.View.extend({
-		tagName: 'div',
-
+	var BikeParkingsView = Backbone.View.extend({
 		initialize: function(){
-			_.bindAll(this,'render');
-			if(this.model) this.model.on('change',this.render,this);
-			console.log('UserLocationView should be bound to UserLocationModel.latitude?');
+			this.template = _.template($('#bikeparkings-template').html());
+			this.listenTo(this.model,'change', this.render);
 		},
 		render: function(){
-			console.log('UserLocationView render called.');
+			this.$el.html(this.template({ bikeparkings: this.model.toJSON() }));
 		}
 	});
 
-	//Start App
+	// - CONTROLLER / ROUTER
 
-	window.PedalParkApp = Backbone.View.extend({
-
+	var ParkingsRouter = Backbone.Router.extend({
 		initialize: function() {
-			userLocationModel = new UserLocationModel();
-			userLocationView = new UserLocationView({ model: userLocationModel });
-			this.render();
-			userLocationModel.getLocation();
+			this.userLocationModel = new UserLocationModel();
+			this.bikeParkingsModel = new BikeParkingsModel();
+			this.bikeParkingsView = new BikeParkingsView({
+				el: $('#bikeparkings').first(),
+				model: this.bikeParkingsModel
+			});
+			this.listenTo(this.userLocationModel, 'change', this.onLocationUpdate);
+		},
+
+		onLocationUpdate: function(model){
+			this.bikeParkingsModel.fetch({
+				data : {
+					lat : model.attributes.latitude,
+					long : model.attributes.longitude,
+					limit : 4
+				}
+			});
 		}
 	});
 
