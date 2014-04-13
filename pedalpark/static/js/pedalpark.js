@@ -9,12 +9,24 @@
 	// Start PedalPark Backbone App
 	window.PedalParkApp = Backbone.View.extend({
 		initialize: function() {
-			console.log('Entering Backbone MVC...');
-			parkingsRouter = new ParkingsRouter();
+			//Update database, and launch parking engine
+			updateRouter = new UpdateRouter();
 		}
 	});
 
 	// - MODEL
+
+	var SizeModel = Backbone.Model.extend({
+		url: function(){
+			return '/size';
+		}
+	});
+
+	var UpdateModel = Backbone.Model.extend({
+		url: function(){
+			return '/update';
+		}
+	});
 
 	var NearBikeParkingsModel = Backbone.Model.extend({
 		url: function() {
@@ -142,11 +154,10 @@
 	});
 
 	var NoticeView = Backbone.View.extend({
-		el : $('#notice').first(),
+		el : $('#notice'),
 		initialize: function(){
 			_.bindAll(this,'render');
 			this.template = _.template($('#notice-template').html());
-			this.listenTo(this.model,'change', this.render);
 		},
 		render: function(notice){
 			this.$el.html(this.template({ 'notice' : notice }));
@@ -154,6 +165,50 @@
 	});
 
 	// - CONTROLLER / ROUTER
+
+	var UpdateRouter = Backbone.Router.extend({
+		initialize: function(){
+			_.bindAll(this,'onSizeReceived','onUpdateSuccess','onUpdateError');
+
+			this.mapView = new MapView();
+			this.mapView.renderWorld();
+
+			this.noticeView = new NoticeView();
+			this.noticeView.render('Loading parking locations, please hang on to your handlebars.');
+
+			this.sizeModel = new SizeModel();
+			this.sizeModel.fetch({ success: this.onSizeReceived	});
+		},
+
+		onSizeReceived: function(){
+			if( this.sizeModel.get('size') <= 0) {
+				this.updateModel = new UpdateModel();
+				this.updateModel.fetch({
+					success : this.onUpdateSuccess,
+					error: this.onUpdateError
+				});
+
+			}else{
+				//Database has previously been updated, proceed with application
+				parkingRouter = new ParkingsRouter();
+			}
+		},
+
+		onUpdateSuccess: function(){
+			if( this.updateModel.get('size') <= 0) this.onUpdateError();
+			else{
+				//Database is updated, proceed with application
+				parkingRouter = new ParkingsRouter();
+			}
+			
+		},
+
+		onUpdateError: function(){
+			this.noticeView.render('Uh-oh. It looks like the server has a flat. Unfortunately, PedalPark is not going to work now.');
+			//Either the data source is unreachable or the database is. The front-end will remain in this state.
+		}
+		
+	});
 
 	var ParkingsRouter = Backbone.Router.extend({
 		initialize: function() {
@@ -164,7 +219,7 @@
 
 			this.mapView = new MapView();
 			this.bikeParkingsView = new BikeParkingsView({ model : this.nearBikeParkingsModel });
-			this.noticeView = new NoticeView({ model : this.nearBikeParkingsModel });
+			this.noticeView = new NoticeView();
 
 			if(!FAKE_SF_LOCATION)
 				this.listenTo(this.userLocationModel, 'change', this.onLocationUpdate);
