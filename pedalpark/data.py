@@ -57,9 +57,7 @@ def update_db():
 
 	print "%d installed bike parkings imported." % (import_size)
 	return jsonify(database_size=import_size)
- 
-
-
+	
 def insert_into_db(c,item):
 	try:
 		c.insert(item)

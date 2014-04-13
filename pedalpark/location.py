@@ -25,9 +25,9 @@ def near():
 
 	return serialize_locations(find_nearest_neighbours(la,lo,limit))
 
-#@app.route('/all')
+@app.route('/all')
 def all():
-	"""Respond with all known and installed bicyle locations"""
+	"""Respond with all known and installed bicycle locations"""
 	return serialize_locations(data.find_db(data.coll()))
 
 def find_nearest_neighbours(latitude,longitude,count):

@@ -2,7 +2,7 @@
 	var TEMPLATE_URL = '/static';
 
 	//These variables help development when not in San Francisco, CA.
-	var FAKE_SF_LOCATION = true;
+	var FAKE_SF_LOCATION = false;
 	var SF_LOCATION_LAT = 37.790947;
 	var SF_LOCATION_LONG = -122.393171;
 
