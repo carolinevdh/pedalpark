@@ -16,14 +16,11 @@ else:
 	connection = pymongo.Connection('localhost',27017)
 	db = connection['pedalpark']
 
-"""Get the Google API key"""
-GOOGLE_API_KEY = open('googleapikey').read()
-
 app = Flask(__name__)
 
 @app.route('/')
 def index():
-	return render_template('index.html',google_api_key = GOOGLE_API_KEY)
+	return render_template('index.html')
 
 import pedalpark.data
 import pedalpark.location
