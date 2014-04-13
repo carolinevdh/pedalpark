@@ -24,6 +24,10 @@ def empty_db(c):
 	c.remove()
 	c.drop_indexes()
 
+def size_db(c):
+	"""Return size of collection"""
+	return c.count()
+
 @app.route('/update')
 def update_db():
 	empty_db(coll())	
@@ -57,7 +61,7 @@ def update_db():
 
 	print "%d installed bike parkings imported." % (import_size)
 	return jsonify(database_size=import_size)
-	
+
 def insert_into_db(c,item):
 	try:
 		c.insert(item)

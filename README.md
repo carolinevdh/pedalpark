@@ -45,13 +45,11 @@ Finding the nearest bike parking can be done by:
 
 ###PedalPark API call examples
 
-**`/update`** populates a MongoDB with bike parkings.
-
-**`/near?lat=37.790947&long=-122.393171&limit=3`** finds the 3 bike parkings closest to the given (lat,long) location.
-
-**`/near?address=Baker+Beach`** finds the bike parking closest to Baker Beach. It also takes a limit argument, but assumes 1 when omitted.
-
-**`/all`** returns all known and installed bike parkings.
+- **`/update`** populates a MongoDB with bike parkings.
+- **`/near?lat=37.790947&long=-122.393171&limit=3`** finds the 3 bike parkings closest to the given (lat,long) location.
+- **`/near?address=Baker+Beach`** finds the bike parking closest to Baker Beach. It also takes a limit argument, but assumes 1 when omitted.
+- **`/all`** returns all known and installed bike parkings.
+- **`/size`** returns the amount of known and installed bike parkings.
 
 ###Live PedalPark app
 

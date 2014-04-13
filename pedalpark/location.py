@@ -27,8 +27,13 @@ def near():
 
 @app.route('/all')
 def all():
-	"""Respond with all known and installed bicycle locations"""
+	"""Respond with all known and installed bicycle parking locations"""
 	return serialize_locations(data.find_db(data.coll()))
+
+@app.route('/size')
+def size():
+	"""Respond with amount of known and installed bicycle parking locations"""
+	return jsonify(size=data.size_db(data.coll()))
 
 def find_nearest_neighbours(latitude,longitude,count):
 	"""Query collection for X bike parkings closest to given (lat, long) location"""
