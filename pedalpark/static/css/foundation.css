@@ -4342,7 +4342,8 @@ select::-ms-expand {
   padding-bottom: 0;
   text-align: center;
   line-height: 2.125rem;
-  border: none; }
+  border: none;
+  margin-top: 1rem; }
 
 .prefix.button {
   padding-left: 0;
@@ -4417,7 +4418,7 @@ textarea {
   color: rgba(0, 0, 0, 0.75);
   display: block;
   font-size: 0.875rem;
-  margin: 0 0 1rem 0;
+  margin: 1rem 0 0 0;
   padding: 0.5rem;
   height: 2.3125rem;
   width: 100%;

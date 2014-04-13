@@ -164,6 +164,19 @@
 		}
 	});
 
+	var ManualDestinationView = Backbone.View.extend({
+		el : $('#destinationform'),
+		initialize: function(){
+			_.bindAll(this,'render');
+			console.log('ManualDestinationView initialize called.');
+			this.template = _.template($('#destinationform-template').html());
+		},
+		render: function(){
+			console.log('ManualDestinationView render called.');
+			this.$el.html(this.template());
+		}
+	});
+
 	// - CONTROLLER / ROUTER
 
 	var UpdateRouter = Backbone.Router.extend({
@@ -220,6 +233,7 @@
 			this.mapView = new MapView();
 			this.bikeParkingsView = new BikeParkingsView({ model : this.nearBikeParkingsModel });
 			this.noticeView = new NoticeView();
+			this.destinationView = new ManualDestinationView();
 
 			if(!FAKE_SF_LOCATION)
 				this.listenTo(this.userLocationModel, 'change', this.onLocationUpdate);
@@ -261,6 +275,7 @@
 				this.parkingFetchError();
 			else {
 				this.noticeView.render('Hi! Here are some bicycle parkings, close to your current location. Pick one to get directions!');
+				this.destinationView.render();
 
 				//Update Google Map with new current location and bike parkings
 				this.mapView.update(
@@ -277,6 +292,7 @@
 				this.parkingFetchError();
 			else {
 				this.noticeView.render('Oops, we couldn\'t find your location. Either way, here are all bicycle parkings in San Francisco! Please enable location awareness in your browser.');
+				this.destinationView.render();
 
 				//Render a map with all known bicycle parkings
 				this.mapView.update(false,true,true,0,0,this.allBikeParkingsModel.get('locations'));
@@ -286,6 +302,7 @@
 		parkingFetchError: function(){
 			console.log('parkingFetchError');
 			this.noticeView.render('Oops, we couldn\t find any bicycle parkings, nor your location. Please enable location awareness in your browser.');
+			this.destinationView.render();
 
 			//Render a map of the world
 			this.mapView.renderWorld();
