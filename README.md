@@ -51,6 +51,8 @@ Finding the nearest bike parking can be done by:
 
 **`/near?address=Baker+Beach`** finds the bike parking closest to Baker Beach. It also takes a limit argument, but assumes 1 when omitted.
 
+**`/all`** returns all known and installed bike parkings.
+
 ###Live PedalPark app
 
 {insert UX doc}

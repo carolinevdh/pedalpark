@@ -15,6 +15,10 @@ def geo_find_db(c,attr,latitude,longitude,count):
 	"""Perform GeoSpatial search, based on (lat,long) coordinate"""
 	return c.find({attr: {'$near': [latitude,longitude]}}).limit(count)
 
+def find_db(c):
+	"""Return all documents in collection"""
+	return c.find();
+
 def empty_db(c):
 	"""Remove all data and indexes from collection"""
 	c.remove()
@@ -54,6 +58,8 @@ def update_db():
 	print "%d installed bike parkings imported." % (import_size)
 	return jsonify(database_size=import_size)
  
+
+
 def insert_into_db(c,item):
 	try:
 		c.insert(item)
