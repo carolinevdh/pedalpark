@@ -7,12 +7,7 @@
 	    <link href="../static/css/foundation.css" media="all" rel="stylesheet" type="text/css"/>
 	    <script data-main="../static/js/main" src="../static/js/vendor/require.js"></script>
 
-	    <style type="text/css">
-			#map-canvas { max-height: 10% }
-		</style>
-		
-
-		<!-- bike parkings template -->
+		<!-- Bike Parkings template -->
 		<script type="text/html" id="bikeparkings-template">
 			<% _.each(bikeparkings.locations, function (parking, index) { %>
 				<% if (index % 2 == 0) { %>
@@ -40,36 +35,39 @@
 			<% }); %>
 		</script>
 
+		<!-- Notice template -->
+		<script type="text/html" id="notice-template">
+			<blockquote class="medium-7 columns">
+					<%= notice %>
+			</blockquote>
+		</script>
+
+		<!-- Custom Destination template -->
+		<script type="text/html" id="destinationform-template">
+			<div class="small-5 columns">
+				<form>
+					<div class="small-10 columns">
+						<input type="text" placeholder="Set your own destination instead."/>
+					</div>
+					<div class="small-2 columns">
+						<input type="submit" value="Go" href="#" class="button postfix"/>
+					</div>       
+				</form>
+			</div>
+		</script>		
+
 	</head>
 	<body>
 
 		<!-- Header and Nav -->
 		<div class="row">
-			<div class="large-3 columns">
+			<div class="small-3 columns">
 				<h1>PedalPark</h1>
 			</div>
-
-			<div class="small-9 columns">
-				<ul class="inline-list right">
-					<li><a href="http://github.com/carolinevdh/pedalpark" target="_blank" >Github</a></li>
-				</ul>
+			<div class="large-9 columns">
+				<h4>bicycle parking in San Francisco, CA</h4>
 			</div>
 		</div>
-
-			
-
-		<!-- Manual Destination Controller -->
-
-		<!--<div class="row center">
-			<form>
-				<div class="small-9 columns">
-					<input type="text" placeholder="Where are you biking to?"/>
-				</div>
-				<div class="small-3 columns">
-					<a href="#" class="small radius button">Go</a><br/> 
-				</div>       
-			</form>
-		</div>-->
 
 
 		<!-- Google Maps -->
@@ -77,19 +75,28 @@
 			<div id="map-canvas" style="width: 100%; height: 20rem;"></div>
 		</div>
 
-		<br />
+		<div class="row">
+			<!-- Insertion of Notice -->
+			<div id="notice"></div>
 
-		<!-- Insertion of bike parkings -->
+			<!-- Insertion of Custom Destination Form -->
+			<div id="destinationform"></div>
+		</div>
+
+		<!-- Insertion of Bike Parkings -->
 		<div class="row" id="bikeparkings"></div>
-
 
 		<!-- Footer -->
 		<footer class="row">
 			<div class="large-12 columns">
 				<hr />
 				<div class="row">
-					<div class="large-6 columns">
-						<p>&copy; Caroline Van den Hauwe</p>
+					<div class="large-4 columns">
+						<p style="font-size: 0.9rem">&copy; Caroline Van den Hauwe</p>
+					</div>
+					<div class="large-8 columns">
+						<p class="right" style="font-size: 0.8rem">Made with Python, MongoDB, Backbone.js, Foundation and love.
+						<a href="http://github.com/carolinevdh/pedalpark" target="_blank">Source on Github.</a></p>
 					</div>
 				</div>
 			</div> 
