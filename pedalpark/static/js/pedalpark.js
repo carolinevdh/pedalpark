@@ -2,13 +2,14 @@
 	var TEMPLATE_URL = '/static';
 
 	//These variables help development when not in San Francisco, CA.
-	var FAKE_SF_LOCATION = false;
+	var FAKE_SF_LOCATION = true;
 	var SF_LOCATION_LAT = 37.790947;
 	var SF_LOCATION_LONG = -122.393171;
 
 	// Start PedalPark Backbone App
 	window.PedalParkApp = Backbone.View.extend({
 		initialize: function() {
+			console.log('Entering Backbone MVC...');
 			parkingsRouter = new ParkingsRouter();
 		}
 	});
@@ -24,10 +25,6 @@
 	var UserLocationModel = Backbone.Model.extend({
 		initialize: function() {
 			_.bindAll(this,'positionSuccess','updateLocation');
-			this.set({
-				latitude : -1,
-				longitude : -1
-			});
 			this.updateLocation();
 		},
 
@@ -36,10 +33,9 @@
 				if(navigator.geolocation)
 					navigator.geolocation.getCurrentPosition(this.positionSuccess);
 			}else{
-				console.log(this);
 				this.set({
-					latitude : SF_LOCATION_LAT,
-					longitude : SF_LOCATION_LONG
+					latitude : 37.390947 + Math.random(),
+					longitude : -122.393171
 				});
 				console.log('Set fake position at (' + this.get('latitude') + ", " + this.get('longitude') + ').');
 			}
@@ -77,7 +73,7 @@
 		},
 		getMapOptions: function(lat, long){
 			return mapOptions = {
-				zoom: 15,
+				zoom: 1,
 				center: new google.maps.LatLng(lat,long),
 				mapTypeId: google.maps.MapTypeId.ROADMAP
 			};
@@ -86,22 +82,30 @@
 			//Build Google Map for drawing
 			mapOptions = this.getMapOptions(lat,long);
 			map = new google.maps.Map(this.el,mapOptions);
+			latLngBounds = new google.maps.LatLngBounds();
 			currentMarker = new google.maps.Marker({
-				position: mapOptions.center,
-				map: map,
+				position : mapOptions.center,
+				map : map,
+				icon : 'static/img/marker-cyclist.png'
 			});
-			console.log(parkinglocations);
+			latLngBounds.extend(mapOptions.center);
 			for ( i = 0; i < parkinglocations.length; i++ ){
 				console.log(parkinglocations[i]);
-				parkingMarker = new google.maps.Marker({
-					position: new google.maps.LatLng(
+				latLng = new google.maps.LatLng(
 						parkinglocations[i].coordinates.latitude,
-						parkinglocations[i].coordinates.longitude),
-					map: map
+						parkinglocations[i].coordinates.longitude);
+				parkingMarker = new google.maps.Marker({
+					position : latLng,
+					map : map,
+					icon : 'static/img/marker-parking-' + (i + 1) + '.png'
 				});
+				latLngBounds.extend(latLng);
 			}
 			bikeLayer = new google.maps.BicyclingLayer();
 			bikeLayer.setMap(map);
+
+			map.setCenter(latLngBounds.getCenter());
+			map.fitBounds(latLngBounds); 
 
 			//Listen to resize events: make Google Map responsive
 			var center;
@@ -132,10 +136,19 @@
 				model: this.bikeParkingsModel
 			});
 			this.mapView = new MapView();
-			this.listenTo(this.userLocationModel, 'change', this.onLocationUpdate);
+			if(!FAKE_SF_LOCATION)
+				this.listenTo(this.userLocationModel, 'change', this.onLocationUpdate);
+			else{
+				this.userLocationModel.set({
+					latitude : SF_LOCATION_LAT,
+					longitude : SF_LOCATION_LONG
+				});
+				this.onLocationUpdate(this.userLocationModel);
+			}
 		},
 
 		onLocationUpdate: function(model){
+			console.log('ParkingsRouter received userLocationModel change.');
 			//Fetch new bike parkings
 			this.bikeParkingsModel.fetch({
 				data : {
