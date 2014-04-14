@@ -1,6 +1,6 @@
 (function() {
 	//These variables help development when not in San Francisco, CA.
-	var FAKE_SF_LOCATION = true;
+	var FAKE_SF_LOCATION = false;
 	var SF_LOCATION_LAT = 37.790947;
 	var SF_LOCATION_LONG = -122.393171;
 
@@ -108,7 +108,6 @@
 		},
 		render: function(parkings, index){
 			for ( var i=0 ; i<parkings.length ; i++ ){
-				console.log(index + i);
 				var bikeParkingView = new BikeParkingView({ model : parkings[i] });
 				this.listenTo( bikeParkingView, 'parking:chosen', this.bubble );
 				this.$el.append(bikeParkingView.$el);
@@ -128,7 +127,7 @@
 		},
 		render: function(collection){
 			this.$el.empty();
-			var length = collection.models.length
+			var length = collection.models.length;
 			for ( var i=1 ; i-1<length ; i+=2){
 				var doubleView = new DoubleBikeParkingsView();
 				this.listenTo( doubleView, 'parking:chosen', this.bubble );
@@ -221,6 +220,11 @@
 			var directionsDisplay = new google.maps.DirectionsRenderer({suppressMarkers: true});
 			directionsDisplay.setMap(map);
 
+			if($('#directions-panel').children()[0]) $('#directions-panel').children()[0].remove();
+			directionsDisplay.setPanel($('#directions-panel')[0]);
+
+			var directionsResult;
+
 			var latLngBounds = new google.maps.LatLngBounds();
 			var start = new google.maps.LatLng(origin[0],origin[1]);
 			var startMarker = new google.maps.Marker({
@@ -253,7 +257,6 @@
 					directionsDisplay.setDirections(result);
 				}
 			});
-
 		},
 
 		getMarkerIcon: function(size, index){
@@ -355,7 +358,6 @@
 			this.destinationView = new DestinationView({ model : destinationModel });
 
 			this.listenTo(destinationModel, 'change', this.onManualDestination);
-
 			this.listenTo(bikeParkingsView, 'parking:chosen', this.onParkingChosen);
 
 			if(!FAKE_SF_LOCATION)
@@ -373,6 +375,7 @@
 			var	origin = [this.nearBikeParkingsModel.get('latitude'), this.nearBikeParkingsModel.get('longitude')];
 			var destination = [model.get('coordinates').latitude, model.get('coordinates').longitude];
 			this.mapView.redrawWithPath(origin,destination);
+			//this.noticeView.render('Great choice, ')
 		},
 
 		onManualDestination: function(model){
@@ -384,6 +387,9 @@
 				success : this.manualParkingFetchSuccess,
 				error : this.parkingFetchError
 			});
+
+			//Remove Google Directions if drawn
+			if($('#directions-panel').children()[0]) $('#directions-panel').children()[0].remove();
 		},
 
 		onLocationUpdate: function(model){

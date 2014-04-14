@@ -1924,7 +1924,7 @@ meta.foundation-mq-topbar {
     border-width: 1px;
     border-color: #b6edff;
     margin-bottom: 1.25rem;
-    padding: 1.25rem;
+    padding: 0.50rem;
     background: #ecfaff; }
     .panel.callout > :first-child {
       margin-top: 0; }
@@ -2909,11 +2909,16 @@ code {
 
 /* Lists */
 ul,
-ol,
-dl {
+ol{
   font-size: 1rem;
   line-height: 1.6;
   margin-bottom: 1.25rem;
+  list-style-position: outside;
+  font-family: inherit; }
+
+dl {
+  font-size: 1rem;
+  line-height: 1.6;
   list-style-position: outside;
   font-family: inherit; }
 
@@ -2956,10 +2961,8 @@ ol {
 
 /* Definition Lists */
 dl dt {
-  margin-bottom: 0.3rem;
   font-weight: bold; }
-dl dd {
-  margin-bottom: 0.75rem; }
+}
 
 /* Abbreviations */
 abbr,
