@@ -13,8 +13,14 @@
 			updateRouter = new UpdateRouter();
 		}
 	});
+	
+	// - MODEL (& Collections)
 
-	// - MODEL
+	var BikeParkingModel = Backbone.Model.extend();
+
+	var BikeParkingsCollection = Backbone.Collection.extend({
+		model: BikeParkingModel
+	});
 
 	var SizeModel = Backbone.Model.extend({
 		url: function(){
@@ -112,8 +118,8 @@
 			nLocations = parkinglocations.length;
 			for ( i = 0; i < nLocations; i++ ){
 				latLng = new google.maps.LatLng(
-						parkinglocations[i].coordinates.latitude,
-						parkinglocations[i].coordinates.longitude);
+						parkinglocations[i].get('coordinates').latitude,
+						parkinglocations[i].get('coordinates').longitude);
 				parkingMarker = new google.maps.Marker({
 					position : latLng,
 					map : map,
@@ -145,6 +151,7 @@
 		},
 
 		renderWorld: function(){
+			console.log('Draw Map of World.');
 			this.update(false,true,false,false,0,0,[]);
 		},
 
@@ -248,6 +255,8 @@
 			this.noticeView = new NoticeView();
 			this.destinationView = new DestinationView({ model : this.destinationModel });
 
+			this.bikeParkingsCollection = new BikeParkingsCollection();
+
 			this.listenTo(this.destinationModel, 'change', this.onManualDestination);
 
 			if(!FAKE_SF_LOCATION)
@@ -302,12 +311,15 @@
 				this.addressGeocodeError(this.destinationModel.get('address'));
 			}else{
 				this.noticeView.render('Great! Here are some bicycle parkings, close to ' + model.get('address') + '. Pick one to get directions.');
+				
+				this.bikeParkingsCollection.reset(model.get('locations'));
+
 				//Update Google Map with new current location and bike parkings
 				this.mapView.update(
 					true,true,true,true,
 					model.get('latitude'),
 					model.get('longitude'),
-					model.get('locations')
+					this.bikeParkingsCollection.models
 				);
 
 				this.destinationView.clear();
@@ -319,32 +331,38 @@
 			this.destinationView.clear();
 		},
 
-		nearParkingFetchSuccess: function(){
-			if( !this.nearBikeParkingsModel.get('success') )
+		nearParkingFetchSuccess: function(model){
+			if( !model.get('success') )
 				this.parkingFetchError();
 			else {
 				this.noticeView.render('Hi! Here are some bicycle parkings, close to your current location. Pick one to get directions.');
 				this.destinationView.render();
+
+				this.bikeParkingsCollection.reset(model.get('locations'));
 
 				//Update Google Map with new current location and bike parkings
 				this.mapView.update(
 					true,true,true,false,
 					this.userLocationModel.get('latitude'),
 					this.userLocationModel.get('longitude'),
-					this.nearBikeParkingsModel.get('locations')
+					this.bikeParkingsCollection.models
 				);
 			}
 		},
 
-		allParkingFetchSuccess: function(){
-			if( !this.allBikeParkingsModel.get('success') )
+		allParkingFetchSuccess: function(model){
+			if( !model.get('success') )
 				this.parkingFetchError();
 			else {
 				this.noticeView.render('Oops, we couldn\'t find your location. Either way, here are all bicycle parkings in San Francisco! Please enable location awareness in your browser.');
 				this.destinationView.render();
 
+				this.bikeParkingsCollection.reset(model.get('locations'));
+
 				//Render a map with all known bicycle parkings
-				this.mapView.update(false,true,true,0,0,this.allBikeParkingsModel.get('locations'));
+				this.mapView.update(
+					false,true,true,0,0,
+					this.bikeParkingsCollection.models);
 			}
 		},
 
