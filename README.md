@@ -57,11 +57,9 @@ Finding the nearest bike parking can be done by:
 
 ---
 
-Todo
-
- - move Backbone MVC's into seperate files
+Todo's & Ideas
+ - move Backbone MVC's into seperate files using RequireJS
  - handle requests with wrong or empty parameters
- - loading screen for /update
 
 
   [1]: https://data.sfgov.org/Transportation/Bicycle-Parking-Public-/w969-5mn4

@@ -90,8 +90,10 @@
 			_.bindAll(this,'render','clicked');
 			this.template = _.template($('#bikeparking-template').html());
 		},
-		render: function(){
+		render: function(i){
+			index = i % 9;
 			this.$el.html(this.template({ parking : this.model.toJSON() }));
+			this.$el.children().children().children().children().first().attr('src','/static/img/marker-parking-' + index + '.png');
 		},
 		clicked: function(){
 			this.trigger('parking:chosen', this.model);
@@ -104,12 +106,13 @@
 			_.bindAll(this,'render');
 			this.template = _.template($('#bikeparkingsrow-template').html());
 		},
-		render: function(parkings){
+		render: function(parkings, index){
 			for ( var i=0 ; i<parkings.length ; i++ ){
+				console.log(index + i);
 				var bikeParkingView = new BikeParkingView({ model : parkings[i] });
 				this.listenTo( bikeParkingView, 'parking:chosen', this.bubble );
 				this.$el.append(bikeParkingView.$el);
-				bikeParkingView.render();
+				bikeParkingView.render(index + i);
 			}
 		},
 		bubble: function(model){
@@ -125,14 +128,15 @@
 		},
 		render: function(collection){
 			this.$el.empty();
-			for ( var i=collection.models.length-1 ; i >= 0 ; i-=2){
+			var length = collection.models.length
+			for ( var i=1 ; i-1<length ; i+=2){
 				var doubleView = new DoubleBikeParkingsView();
 				this.listenTo( doubleView, 'parking:chosen', this.bubble );
 				this.$el.append(doubleView.$el);
-				if( i - 1 >= 0 )
-					doubleView.render([collection.models[i],collection.models[i-1]]);
+				if( i < length )
+					doubleView.render([collection.models[i-1],collection.models[i]], i);
 				else
-					doubleView.render([collection.models[i]]);
+					doubleView.render([collection.models[i-1]]);
 			}
 		},
 		bubble: function(model){
@@ -212,7 +216,6 @@
 		},
 
 		redrawWithPath: function(origin, destination){
-			console.log(origin + ' to ' + destination + ' map: drawing.');
 			map = new google.maps.Map(this.el, {});
 
 			var directionsDisplay = new google.maps.DirectionsRenderer({suppressMarkers: true});
@@ -369,7 +372,6 @@
 		onParkingChosen: function(model){
 			var	origin = [this.nearBikeParkingsModel.get('latitude'), this.nearBikeParkingsModel.get('longitude')];
 			var destination = [model.get('coordinates').latitude, model.get('coordinates').longitude];
-			console.log('here is okay');
 			this.mapView.redrawWithPath(origin,destination);
 		},
 
