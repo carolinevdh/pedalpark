@@ -69,7 +69,7 @@ Rendering drawn and written directions to a parking location of your choosing:
 
 PedalPark is responsive, and works on phones too:
 
-![](doc/mobile-manual.png) ![](doc/mobile-directions.png) 
+![](doc/mobile-manual.PNG) ![](doc/mobile-directions.PNG) 
 
 ## User Guide
 
