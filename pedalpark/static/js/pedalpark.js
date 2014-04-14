@@ -93,8 +93,6 @@
 			this.template = _.template($('#bikeparking-template').html());
 		},
 		render: function(){
-			//this.button = new DynamicButtonView({ model : this.model });
-			//this.button.render();
 			this.$el.html(this.template({ parking : this.model.toJSON() }));
 		},
 		clicked: function(){
@@ -133,7 +131,7 @@
 				var doubleView = new DoubleBikeParkingsView();
 				this.listenTo( doubleView, 'parking:chosen', this.bubble );
 				this.$el.append(doubleView.$el);
-				if( i - 1 >= 0 ) 
+				if( i - 1 >= 0 )
 					doubleView.render([collection.models[i],collection.models[i-1]]);
 				else
 					doubleView.render([collection.models[i]]);
@@ -146,7 +144,10 @@
 
 	var MapView = Backbone.View.extend({
 		el : $('#map-canvas'),
-		update: function(doMarkLocation, doCenter, doFitBounds, isManualLocation, lat, long, parkinglocations){
+		initialize: function(){
+			_.bindAll(this,'redrawWithMarkers','redrawWithPath');
+		},
+		redrawWithMarkers: function(doMarkLocation, doCenter, isManualLocation, lat, long, parkinglocations){
 			//Build Google Map for drawing
 			map = new google.maps.Map(this.el, { zoom : 1});
 			mainLatLng = new google.maps.LatLng(lat, long);
@@ -177,7 +178,7 @@
 			bikeLayer.setMap(map);
 
 			if ( doCenter )	map.setCenter(latLngBounds.getCenter());
-			if ( doFitBounds ) map.fitBounds(latLngBounds);
+			map.fitBounds(latLngBounds);
 
 			//Listen to resize events: make Google Map responsive
 			var center;
@@ -189,24 +190,74 @@
 			});
 			google.maps.event.addDomListener(window, 'resize', function() {
 				if( doCenter ) map.setCenter(center);
-				if( doFitBounds ) map.fitBounds(latLngBounds);
+				map.fitBounds(latLngBounds);
 			});
-
-			//Finally, draw Google Map
-			this.render();
 		},
 
-		renderWorld: function(){
-			this.update(false,true,false,false,0,0,[]);
+		redrawWorld: function(){
+			map = new google.maps.Map(this.el, {
+				zoom : 1,
+				center : new google.maps.LatLng(0,0)
+			});
+
+			//Listen to resize events: make Google Map responsive
+			var center;
+			function calculateCenter() {
+				center = map.getCenter();
+			}
+			google.maps.event.addDomListener(map, 'idle', function() {
+				calculateCenter();
+			});
+			google.maps.event.addDomListener(window, 'resize', function() {
+				map.setCenter(center);
+			});
+		},
+
+		redrawWithPath: function(origin, destination){
+			console.log(origin + ' to ' + destination + ' map: drawing.');
+			map = new google.maps.Map(this.el, {});
+
+			var directionsDisplay = new google.maps.DirectionsRenderer({suppressMarkers: true});
+			directionsDisplay.setMap(map);
+
+			var latLngBounds = new google.maps.LatLngBounds();
+			var start = new google.maps.LatLng(origin[0],origin[1]);
+			var startMarker = new google.maps.Marker({
+					position : start,
+					map : map,
+					icon : new google.maps.MarkerImage('static/img/marker-cyclist.png')
+			});
+			latLngBounds.extend(start);
+			var end = new google.maps.LatLng(destination[0],destination[1]);
+			var endMarker = new google.maps.Marker({
+					position : end,
+					map : map,
+					icon : new google.maps.MarkerImage('static/img/marker-parking.png')
+			});
+			latLngBounds.extend(end);
+			map.fitBounds(latLngBounds);
+
+			var bikeLayer = new google.maps.BicyclingLayer();
+			bikeLayer.setMap(map);
+
+			var request = {
+				origin: start,
+				destination: end,
+				travelMode: google.maps.TravelMode.BICYCLING
+			};
+
+			var directionsService = new google.maps.DirectionsService();
+			directionsService.route(request, function(result, status) {
+				if (status == google.maps.DirectionsStatus.OK) {
+					directionsDisplay.setDirections(result);
+				}
+			});
+
 		},
 
 		getMarkerIcon: function(size, index){
 			if ( size < 10) return 'static/img/marker-parking-' + index + '.png';
 			else return 'static/img/marker-parking.png';
-		},
-
-		makeResponsive: function(map){
-			
 		}
 	});
 
@@ -248,7 +299,8 @@
 			_.bindAll(this,'onSizeReceived','onUpdateSuccess','onUpdateError');
 
 			this.mapView = new MapView();
-			this.mapView.renderWorld();
+			this.mapView.redrawWorld();
+			this.mapView.render();
 
 			this.noticeView = new NoticeView();
 			this.noticeView.render('Loading parking locations, please hang on to your handlebars.');
@@ -281,14 +333,14 @@
 
 		onUpdateError: function(){
 			this.noticeView.render('Uh-oh. It looks like the server has a flat. Unfortunately, PedalPark is not going to work now.');
-			//Either the data source is unreachable or the database is. The front-end will remain in this state.
+			//Either the data source is unreachable or the database is. Execution of the page stops here.
 		}
 		
 	});
 
 	var ParkingsRouter = Backbone.Router.extend({
 		initialize: function() {
-			_.bindAll(this,'onManualDestination','onLocationUpdate','manualParkingFetchSuccess','nearParkingFetchSuccess','allParkingFetchSuccess','parkingFetchError');
+			_.bindAll(this,'onManualDestination','onLocationUpdate','manualParkingFetchSuccess','nearParkingFetchSuccess','allParkingFetchSuccess','parkingFetchError','onParkingChosen');
 
 			this.userLocationModel = new UserLocationModel();
 			this.nearBikeParkingsModel = new NearBikeParkingsModel();
@@ -317,7 +369,10 @@
 		},
 
 		onParkingChosen: function(model){
-			console.log('Picked parking at ' + model.get('location_name'));
+			var	origin = [this.nearBikeParkingsModel.get('latitude'), this.nearBikeParkingsModel.get('longitude')];
+			var destination = [model.get('coordinates').latitude, model.get('coordinates').longitude];
+			console.log('here is okay');
+			this.mapView.redrawWithPath(origin,destination);
 		},
 
 		onManualDestination: function(model){
@@ -364,8 +419,8 @@
 				this.bikeParkingsCollection.reset(model.get('locations'));
 
 				//Update Google Map with new current location and bike parkings
-				this.mapView.update(
-					true,true,true,true,
+				this.mapView.redrawWithMarkers(
+					true,true,true,
 					model.get('latitude'),
 					model.get('longitude'),
 					this.bikeParkingsCollection.models
@@ -390,8 +445,8 @@
 				this.bikeParkingsCollection.reset(model.get('locations'));
 
 				//Update Google Map with new current location and bike parkings
-				this.mapView.update(
-					true,true,true,false,
+				this.mapView.redrawWithMarkers(
+					true,true,false,
 					this.userLocationModel.get('latitude'),
 					this.userLocationModel.get('longitude'),
 					this.bikeParkingsCollection.models
@@ -409,8 +464,8 @@
 				this.bikeParkingsCollection.reset(model.get('locations'));
 
 				//Render a map with all known bicycle parkings
-				this.mapView.update(
-					false,true,true,0,0,
+				this.mapView.redrawWithMarkers(
+					false,true,false,0,0,
 					this.bikeParkingsCollection.models);
 			}
 		},
