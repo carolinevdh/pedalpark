@@ -52,9 +52,11 @@ Finding the nearest bike parking can be done by:
 - **`/all`** returns all known and installed bike parkings.
 - **`/size`** returns the amount of known and installed bicycle parkings.
 
-###[Live PedalPark app][3]
+###Live PedalPark app
 
-## Screenshots
+Online at [PedalPark.herokuapp.com][3]
+
+#### Screenshots
 Showing 4 bicycle parking locations closest to your current location: 
 
 ![](doc/full-location.png)   
@@ -70,8 +72,6 @@ Rendering drawn and written directions to a parking location of your choosing:
 PedalPark is responsive, and works on phones too:
 
 ![](doc/mobile-manual.PNG) ![](doc/mobile-directions.PNG) 
-
-## User Guide
 
 ---
 
