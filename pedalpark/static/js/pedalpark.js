@@ -1,14 +1,12 @@
 (function() {
-	var TEMPLATE_URL = '/static';
-
 	//These variables help development when not in San Francisco, CA.
 	var FAKE_SF_LOCATION = true;
 	var SF_LOCATION_LAT = 37.790947;
 	var SF_LOCATION_LONG = -122.393171;
 
-	// Start PedalPark Backbone App
+	// Start PedalPark Backbone.js App
 	window.PedalParkApp = Backbone.View.extend({
-		initialize: function() {
+		initialize: function() {			
 			//Update database, and launch parking engine
 			var updateRouter = new UpdateRouter();
 		}
