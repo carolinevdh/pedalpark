@@ -348,16 +348,16 @@
 
 			var userLocationModel = new UserLocationModel();
 			this.nearBikeParkingsModel = new NearBikeParkingsModel();
-			var destinationModel = new DestinationModel();
+			this.destinationModel = new DestinationModel();
 
 			this.bikeParkingsCollection = new BikeParkingsCollection();
 
 			this.mapView = new MapView();
 			var bikeParkingsView = new BikeParkingsView({ collection : this.bikeParkingsCollection });
 			this.noticeView = new NoticeView();
-			this.destinationView = new DestinationView({ model : destinationModel });
+			this.destinationView = new DestinationView({ model : this.destinationModel });
 
-			this.listenTo(destinationModel, 'change', this.onManualDestination);
+			this.listenTo(this.destinationModel, 'change', this.onManualDestination);
 			this.listenTo(bikeParkingsView, 'parking:chosen', this.onParkingChosen);
 
 			if(!FAKE_SF_LOCATION)
@@ -418,7 +418,7 @@
 
 		manualParkingFetchSuccess: function(model){
 			if( !model.get('success') ) {
-				this.addressGeocodeError(model.get('address'));
+				this.addressGeocodeError(this.destinationModel.get('address'));
 			}else{
 				this.noticeView.render('Great! Here are some bicycle parkings, close to ' + model.get('address') + '. Pick one to get directions.');
 				
