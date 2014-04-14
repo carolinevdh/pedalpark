@@ -2,7 +2,7 @@
 	var TEMPLATE_URL = '/static';
 
 	//These variables help development when not in San Francisco, CA.
-	var FAKE_SF_LOCATION = false;
+	var FAKE_SF_LOCATION = true;
 	var SF_LOCATION_LAT = 37.790947;
 	var SF_LOCATION_LONG = -122.393171;
 
@@ -76,6 +76,8 @@
 		}
 	});
 
+	var DestinationModel = Backbone.Model.extend({});
+
 	// - VIEW
 
 	var BikeParkingsView = Backbone.View.extend({
@@ -92,16 +94,18 @@
 	var MapView = Backbone.View.extend({
 		el : $('#map-canvas'),
 
-		update: function(doMarkLocation, doCenter, doFitBounds, lat, long, parkinglocations){
+		update: function(doMarkLocation, doCenter, doFitBounds, isManualLocation, lat, long, parkinglocations){
 			//Build Google Map for drawing
 			map = new google.maps.Map(this.el, { zoom : 1});
 			mainLatLng = new google.maps.LatLng(lat, long);
 			latLngBounds = new google.maps.LatLngBounds();
 			if ( doMarkLocation ) {
+				if ( isManualLocation ) icon = 'static/img/marker-finish.png';
+				else icon = 'static/img/marker-cyclist.png';
 				currentMarker = new google.maps.Marker({
 					position : mainLatLng,
 					map : map,
-					icon : 'static/img/marker-cyclist.png'
+					icon : icon
 				});
 				latLngBounds.extend(mainLatLng);
 			}
@@ -133,6 +137,7 @@
 			});
 			google.maps.event.addDomListener(window, 'resize', function() {
 				if( doCenter ) map.setCenter(center);
+				if( doFitBounds ) map.fitBounds(latLngBounds);
 			});
 
 			//Finally, draw Google Map
@@ -140,7 +145,7 @@
 		},
 
 		renderWorld: function(){
-			this.update(false,true,false,0,0,[]);
+			this.update(false,true,false,false,0,0,[]);
 		},
 
 		getMarkerIcon: function(size, index){
@@ -164,16 +169,24 @@
 		}
 	});
 
-	var ManualDestinationView = Backbone.View.extend({
+	var DestinationView = Backbone.View.extend({
 		el : $('#destinationform'),
+		events: {'submit form#frm-destination': 'setDestination'},
 		initialize: function(){
-			_.bindAll(this,'render');
-			console.log('ManualDestinationView initialize called.');
+			_.bindAll(this,'render','setDestination');
 			this.template = _.template($('#destinationform-template').html());
 		},
 		render: function(){
-			console.log('ManualDestinationView render called.');
 			this.$el.html(this.template());
+		},
+		clear: function(){
+			console.log('clear');
+			$('#destination').val('');
+		},
+		setDestination: function(event){
+			event.preventDefault();
+			var destination = $('#destination').val();
+			this.model.set('address',destination);
 		}
 	});
 
@@ -200,7 +213,6 @@
 					success : this.onUpdateSuccess,
 					error: this.onUpdateError
 				});
-
 			}else{
 				//Database has previously been updated, proceed with application
 				parkingRouter = new ParkingsRouter();
@@ -225,15 +237,18 @@
 
 	var ParkingsRouter = Backbone.Router.extend({
 		initialize: function() {
-			_.bindAll(this,'onLocationUpdate','nearParkingFetchSuccess','allParkingFetchSuccess','parkingFetchError');
+			_.bindAll(this,'onManualDestination','onLocationUpdate','manualParkingFetchSuccess','nearParkingFetchSuccess','allParkingFetchSuccess','parkingFetchError');
 
 			this.userLocationModel = new UserLocationModel();
 			this.nearBikeParkingsModel = new NearBikeParkingsModel();
+			this.destinationModel = new DestinationModel();
 
 			this.mapView = new MapView();
 			this.bikeParkingsView = new BikeParkingsView({ model : this.nearBikeParkingsModel });
 			this.noticeView = new NoticeView();
-			this.destinationView = new ManualDestinationView();
+			this.destinationView = new DestinationView({ model : this.destinationModel });
+
+			this.listenTo(this.destinationModel, 'change', this.onManualDestination);
 
 			if(!FAKE_SF_LOCATION)
 				this.listenTo(this.userLocationModel, 'change', this.onLocationUpdate);
@@ -244,6 +259,18 @@
 				});
 				this.onLocationUpdate(this.userLocationModel);
 			}
+		},
+
+		onManualDestination: function(model){
+			console.log('In onManualDestination');
+			this.nearBikeParkingsModel.fetch({
+				data : {
+					address : model.get('address'),
+					limit : 4
+				},
+				success : this.manualParkingFetchSuccess,
+				error : this.parkingFetchError
+			});
 		},
 
 		onLocationUpdate: function(model){
@@ -270,16 +297,38 @@
 			}
 		},
 
+		manualParkingFetchSuccess: function(model){
+			if( !model.get('success') ) {
+				this.addressGeocodeError(this.destinationModel.get('address'));
+			}else{
+				this.noticeView.render('Great! Here are some bicycle parkings, close to ' + model.get('address') + '. Pick one to get directions.');
+				//Update Google Map with new current location and bike parkings
+				this.mapView.update(
+					true,true,true,true,
+					model.get('latitude'),
+					model.get('longitude'),
+					model.get('locations')
+				);
+
+				this.destinationView.clear();
+			}
+		},
+
+		addressGeocodeError: function(address){
+			this.noticeView.render('Oops, we have no idea where ' + address + ' is. Could you rephrase, please?');
+			this.destinationView.clear();
+		},
+
 		nearParkingFetchSuccess: function(){
 			if( !this.nearBikeParkingsModel.get('success') )
 				this.parkingFetchError();
 			else {
-				this.noticeView.render('Hi! Here are some bicycle parkings, close to your current location. Pick one to get directions!');
+				this.noticeView.render('Hi! Here are some bicycle parkings, close to your current location. Pick one to get directions.');
 				this.destinationView.render();
 
 				//Update Google Map with new current location and bike parkings
 				this.mapView.update(
-					true,true,true,
+					true,true,true,false,
 					this.userLocationModel.get('latitude'),
 					this.userLocationModel.get('longitude'),
 					this.nearBikeParkingsModel.get('locations')
@@ -300,7 +349,6 @@
 		},
 
 		parkingFetchError: function(){
-			console.log('parkingFetchError');
 			this.noticeView.render('Oops, we couldn\t find any bicycle parkings, nor your location. Please enable location awareness in your browser.');
 			this.destinationView.render();
 
