@@ -2,7 +2,7 @@
 	var TEMPLATE_URL = '/static';
 
 	//These variables help development when not in San Francisco, CA.
-	var FAKE_SF_LOCATION = true;
+	var FAKE_SF_LOCATION = false;
 	var SF_LOCATION_LAT = 37.790947;
 	var SF_LOCATION_LONG = -122.393171;
 
@@ -13,7 +13,7 @@
 			updateRouter = new UpdateRouter();
 		}
 	});
-	
+
 	// - MODEL (& Collections)
 
 	var BikeParkingModel = Backbone.Model.extend();
@@ -86,14 +86,46 @@
 
 	// - VIEW
 
-	var BikeParkingsView = Backbone.View.extend({
-		el: $('#bikeparkings').first(),
+	var BikeParkingView = Backbone.View.extend({
 		initialize: function(){
-			this.template = _.template($('#bikeparkings-template').html());
-			this.listenTo(this.model,'change', this.render);
+			_.bindAll(this,'render');
+			this.template = _.template($('#bikeparking-template').html());
 		},
 		render: function(){
-			this.$el.html(this.template({ bikeparkings: this.model.toJSON() }));
+			this.$el.html(this.template({ parking : this.model.toJSON() }));
+		}
+	});
+
+	var DoubleBikeParkingsView = Backbone.View.extend({
+		initialize: function(){
+			_.bindAll(this,'render');
+			this.template = _.template($('#bikeparkingsrow-template').html());
+		},
+		render: function(parkings){
+			for ( var i=0 ; i<parkings.length ; i++ ){
+				bikeParkingView = new BikeParkingView({ model : parkings[i] });
+				this.$el.append(bikeParkingView.$el);
+				bikeParkingView.render();
+			}
+		}
+	});
+
+	var BikeParkingsView = Backbone.View.extend({
+		el: $('#bikeparkings'),
+		initialize: function(){
+			_.bindAll(this,'render');
+			this.collection.bind('reset', this.render, this);
+		},
+		render: function(collection){
+			this.$el.empty();
+			for ( var i=collection.models.length-1 ; i >= 0 ; i-=2){
+				doubleView = new DoubleBikeParkingsView();
+				this.$el.append(doubleView.$el);
+				if( i - 1 >= 0 ) 
+					doubleView.render([collection.models[i],collection.models[i-1]]);
+				else
+					doubleView.render([collection.models[i]]);
+			}
 		}
 	});
 
@@ -151,7 +183,6 @@
 		},
 
 		renderWorld: function(){
-			console.log('Draw Map of World.');
 			this.update(false,true,false,false,0,0,[]);
 		},
 
@@ -187,7 +218,6 @@
 			this.$el.html(this.template());
 		},
 		clear: function(){
-			console.log('clear');
 			$('#destination').val('');
 		},
 		setDestination: function(event){
@@ -250,12 +280,12 @@
 			this.nearBikeParkingsModel = new NearBikeParkingsModel();
 			this.destinationModel = new DestinationModel();
 
+			this.bikeParkingsCollection = new BikeParkingsCollection();
+
 			this.mapView = new MapView();
-			this.bikeParkingsView = new BikeParkingsView({ model : this.nearBikeParkingsModel });
+			this.bikeParkingsView = new BikeParkingsView({ collection : this.bikeParkingsCollection });
 			this.noticeView = new NoticeView();
 			this.destinationView = new DestinationView({ model : this.destinationModel });
-
-			this.bikeParkingsCollection = new BikeParkingsCollection();
 
 			this.listenTo(this.destinationModel, 'change', this.onManualDestination);
 
@@ -271,7 +301,6 @@
 		},
 
 		onManualDestination: function(model){
-			console.log('In onManualDestination');
 			this.nearBikeParkingsModel.fetch({
 				data : {
 					address : model.get('address'),

@@ -7,32 +7,28 @@
 	    <link href="../static/css/foundation.css" media="all" rel="stylesheet" type="text/css"/>
 	    <script data-main="../static/js/main" src="../static/js/vendor/require.js"></script>
 
-		<!-- Bike Parkings template -->
-		<script type="text/html" id="bikeparkings-template">
-			<% _.each(bikeparkings.locations, function (parking, index) { %>
-				<% if (index % 2 == 0) { %>
-					<div class="row">
-				<% } %>
-				<div class="large-6 columns">
-					<div class="callout panel clearfix">
-						<div class="small-9 columns">
-							<%= parking.location_name %>
+		<!-- Single Bike Parking template -->
+		<script type="text/html" id="bikeparking-template">
+			<div class="large-6 columns">
+				<div class="callout panel clearfix">
+					<div class="small-9 columns">
+						<%= parking.location_name %>
+						<br />
+						<% if (parking.yr_inst && parking.yr_inst.toLowerCase() != 'none') { %>
+							<%= parking.yr_inst %>
 							<br />
-							<% if (parking.yr_inst && parking.yr_inst.toLowerCase() != 'none') { %>
-								<%= parking.yr_inst %>
-								<br />
-							<% } %>
-							it&#39;s a <%= parking.placement.toLowerCase() %> <%= parking.bike_parking.toLowerCase() %>
-						</div>
-						<div class="small-3 columns"> 
-							<a href="#" class="tiny round button">Go</a>
-						</div>
+						<% } %>
+						it&#39;s a <%= parking.placement.toLowerCase() %> <%= parking.bike_parking.toLowerCase() %>
+					</div>
+					<div class="small-3 columns"> 
+						<a href="#" class="tiny round button">Go</a>
 					</div>
 				</div>
-				<% if (index % 2 != 0) { %>
-					</div>
-				<% } %>
-			<% }); %>
+			</div>
+		</script>
+
+		<!-- Row template, for two Bike Parkings -->
+		<script type"text/html" id="bikeparkingsrow-template">
 		</script>
 
 		<!-- Notice template -->
