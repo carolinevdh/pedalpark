@@ -2,7 +2,7 @@
 	var TEMPLATE_URL = '/static';
 
 	//These variables help development when not in San Francisco, CA.
-	var FAKE_SF_LOCATION = false;
+	var FAKE_SF_LOCATION = true;
 	var SF_LOCATION_LAT = 37.790947;
 	var SF_LOCATION_LONG = -122.393171;
 
@@ -87,26 +87,37 @@
 	// - VIEW
 
 	var BikeParkingView = Backbone.View.extend({
+		events: { 'click' : 'clicked' },
 		initialize: function(){
-			_.bindAll(this,'render');
+			_.bindAll(this,'render','clicked');
 			this.template = _.template($('#bikeparking-template').html());
 		},
 		render: function(){
+			//this.button = new DynamicButtonView({ model : this.model });
+			//this.button.render();
 			this.$el.html(this.template({ parking : this.model.toJSON() }));
+		},
+		clicked: function(){
+			this.trigger('parking:chosen', this.model);
 		}
 	});
 
 	var DoubleBikeParkingsView = Backbone.View.extend({
+		events: { 'parking:chosen' : 'clicked' },
 		initialize: function(){
 			_.bindAll(this,'render');
 			this.template = _.template($('#bikeparkingsrow-template').html());
 		},
 		render: function(parkings){
 			for ( var i=0 ; i<parkings.length ; i++ ){
-				bikeParkingView = new BikeParkingView({ model : parkings[i] });
+				var bikeParkingView = new BikeParkingView({ model : parkings[i] });
+				this.listenTo( bikeParkingView, 'parking:chosen', this.bubble );
 				this.$el.append(bikeParkingView.$el);
 				bikeParkingView.render();
 			}
+		},
+		bubble: function(model){
+			this.trigger('parking:chosen', model);
 		}
 	});
 
@@ -119,19 +130,22 @@
 		render: function(collection){
 			this.$el.empty();
 			for ( var i=collection.models.length-1 ; i >= 0 ; i-=2){
-				doubleView = new DoubleBikeParkingsView();
+				var doubleView = new DoubleBikeParkingsView();
+				this.listenTo( doubleView, 'parking:chosen', this.bubble );
 				this.$el.append(doubleView.$el);
 				if( i - 1 >= 0 ) 
 					doubleView.render([collection.models[i],collection.models[i-1]]);
 				else
 					doubleView.render([collection.models[i]]);
 			}
+		},
+		bubble: function(model){
+			this.trigger('parking:chosen', model);
 		}
 	});
 
 	var MapView = Backbone.View.extend({
 		el : $('#map-canvas'),
-
 		update: function(doMarkLocation, doCenter, doFitBounds, isManualLocation, lat, long, parkinglocations){
 			//Build Google Map for drawing
 			map = new google.maps.Map(this.el, { zoom : 1});
@@ -289,6 +303,8 @@
 
 			this.listenTo(this.destinationModel, 'change', this.onManualDestination);
 
+			this.listenTo(this.bikeParkingsView, 'parking:chosen', this.onParkingChosen);
+
 			if(!FAKE_SF_LOCATION)
 				this.listenTo(this.userLocationModel, 'change', this.onLocationUpdate);
 			else{
@@ -298,6 +314,10 @@
 				});
 				this.onLocationUpdate(this.userLocationModel);
 			}
+		},
+
+		onParkingChosen: function(model){
+			console.log('Picked parking at ' + model.get('location_name'));
 		},
 
 		onManualDestination: function(model){
@@ -401,7 +421,7 @@
 
 			//Render a map of the world
 			this.mapView.renderWorld();
-		},
+		}
 	});
 
 }());
