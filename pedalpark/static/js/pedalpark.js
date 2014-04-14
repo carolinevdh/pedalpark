@@ -10,7 +10,7 @@
 	window.PedalParkApp = Backbone.View.extend({
 		initialize: function() {
 			//Update database, and launch parking engine
-			updateRouter = new UpdateRouter();
+			var updateRouter = new UpdateRouter();
 		}
 	});
 
@@ -150,31 +150,31 @@
 		redrawWithMarkers: function(doMarkLocation, doCenter, isManualLocation, lat, long, parkinglocations){
 			//Build Google Map for drawing
 			map = new google.maps.Map(this.el, { zoom : 1});
-			mainLatLng = new google.maps.LatLng(lat, long);
-			latLngBounds = new google.maps.LatLngBounds();
+			var mainLatLng = new google.maps.LatLng(lat, long);
+			var latLngBounds = new google.maps.LatLngBounds();
 			if ( doMarkLocation ) {
 				if ( isManualLocation ) icon = 'static/img/marker-finish.png';
 				else icon = 'static/img/marker-cyclist.png';
-				currentMarker = new google.maps.Marker({
+				var currentMarker = new google.maps.Marker({
 					position : mainLatLng,
 					map : map,
 					icon : icon
 				});
 				latLngBounds.extend(mainLatLng);
 			}
-			nLocations = parkinglocations.length;
+			var nLocations = parkinglocations.length;
 			for ( i = 0; i < nLocations; i++ ){
-				latLng = new google.maps.LatLng(
+				var latLng = new google.maps.LatLng(
 						parkinglocations[i].get('coordinates').latitude,
 						parkinglocations[i].get('coordinates').longitude);
-				parkingMarker = new google.maps.Marker({
+				var parkingMarker = new google.maps.Marker({
 					position : latLng,
 					map : map,
 					icon : this.getMarkerIcon(nLocations, i+1)
 				});
 				latLngBounds.extend(latLng);
 			}
-			bikeLayer = new google.maps.BicyclingLayer();
+			var bikeLayer = new google.maps.BicyclingLayer();
 			bikeLayer.setMap(map);
 
 			if ( doCenter )	map.setCenter(latLngBounds.getCenter());
@@ -305,28 +305,28 @@
 			this.noticeView = new NoticeView();
 			this.noticeView.render('Loading parking locations, please hang on to your handlebars.');
 
-			this.sizeModel = new SizeModel();
-			this.sizeModel.fetch({ success: this.onSizeReceived	});
+			var sizeModel = new SizeModel();
+			sizeModel.fetch({ success: this.onSizeReceived	});
 		},
 
-		onSizeReceived: function(){
-			if( this.sizeModel.get('size') <= 0) {
-				this.updateModel = new UpdateModel();
-				this.updateModel.fetch({
+		onSizeReceived: function(model){
+			if( model.get('size') <= 0) {
+				var updateModel = new UpdateModel();
+				updateModel.fetch({
 					success : this.onUpdateSuccess,
 					error: this.onUpdateError
 				});
 			}else{
 				//Database has previously been updated, proceed with application
-				parkingRouter = new ParkingsRouter();
+				var parkingRouter = new ParkingsRouter();
 			}
 		},
 
-		onUpdateSuccess: function(){
-			if( this.updateModel.get('size') <= 0) this.onUpdateError();
+		onUpdateSuccess: function(model){
+			if( model.get('size') <= 0) this.onUpdateError();
 			else{
 				//Database is updated, proceed with application
-				parkingRouter = new ParkingsRouter();
+				var parkingRouter = new ParkingsRouter();
 			}
 			
 		},
@@ -342,29 +342,29 @@
 		initialize: function() {
 			_.bindAll(this,'onManualDestination','onLocationUpdate','manualParkingFetchSuccess','nearParkingFetchSuccess','allParkingFetchSuccess','parkingFetchError','onParkingChosen');
 
-			this.userLocationModel = new UserLocationModel();
+			var userLocationModel = new UserLocationModel();
 			this.nearBikeParkingsModel = new NearBikeParkingsModel();
-			this.destinationModel = new DestinationModel();
+			var destinationModel = new DestinationModel();
 
 			this.bikeParkingsCollection = new BikeParkingsCollection();
 
 			this.mapView = new MapView();
-			this.bikeParkingsView = new BikeParkingsView({ collection : this.bikeParkingsCollection });
+			var bikeParkingsView = new BikeParkingsView({ collection : this.bikeParkingsCollection });
 			this.noticeView = new NoticeView();
-			this.destinationView = new DestinationView({ model : this.destinationModel });
+			this.destinationView = new DestinationView({ model : destinationModel });
 
-			this.listenTo(this.destinationModel, 'change', this.onManualDestination);
+			this.listenTo(destinationModel, 'change', this.onManualDestination);
 
-			this.listenTo(this.bikeParkingsView, 'parking:chosen', this.onParkingChosen);
+			this.listenTo(bikeParkingsView, 'parking:chosen', this.onParkingChosen);
 
 			if(!FAKE_SF_LOCATION)
-				this.listenTo(this.userLocationModel, 'change', this.onLocationUpdate);
+				this.listenTo(userLocationModel, 'change', this.onLocationUpdate);
 			else{
-				this.userLocationModel.set({
+				userLocationModel.set({
 					latitude : SF_LOCATION_LAT,
 					longitude : SF_LOCATION_LONG
 				});
-				this.onLocationUpdate(this.userLocationModel);
+				this.onLocationUpdate(userLocationModel);
 			}
 		},
 
@@ -402,8 +402,8 @@
 			//If no location exists for the user
 			}else{
 				//Fetch all bike parkings
-				this.allBikeParkingsModel = new AllBikeParkingsModel();
-				this.allBikeParkingsModel.fetch({
+				var allBikeParkingsModel = new AllBikeParkingsModel();
+				allBikeParkingsModel.fetch({
 					success : this.allParkingFetchSuccess,
 					error : this.parkingFetchError
 				});
@@ -412,7 +412,7 @@
 
 		manualParkingFetchSuccess: function(model){
 			if( !model.get('success') ) {
-				this.addressGeocodeError(this.destinationModel.get('address'));
+				this.addressGeocodeError(model.get('address'));
 			}else{
 				this.noticeView.render('Great! Here are some bicycle parkings, close to ' + model.get('address') + '. Pick one to get directions.');
 				
@@ -447,8 +447,8 @@
 				//Update Google Map with new current location and bike parkings
 				this.mapView.redrawWithMarkers(
 					true,true,false,
-					this.userLocationModel.get('latitude'),
-					this.userLocationModel.get('longitude'),
+					model.get('latitude'),
+					model.get('longitude'),
 					this.bikeParkingsCollection.models
 				);
 			}
