@@ -69,9 +69,17 @@ Rendering drawn and written directions to a parking location of your choosing:
 
 ![](doc/full-directions.png)
 
-PedalPark is responsive, and works on phones too:
+PedalPark is responsive, and works on phones as well:
 
 ![](doc/mobile-manual.PNG) ![](doc/mobile-directions.PNG) 
+                                                        
+Additionally, it greets you while it checks for and possibly updates its database: 
+
+![](doc/full-loading.png)
+
+And when PedalPark can't locate you automatically, it shows all bicycle parking spots in San Francisco, CA:
+
+![](doc/full-all.png)
 
 ---
 
