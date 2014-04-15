@@ -30,10 +30,13 @@ def size_db(c):
 
 @app.route('/update')
 def update_db():
+	"""Fetch bicycle parkings from SF 311 and store them in a collection"""
+
+	#Empty the database
 	empty_db(coll())	
 	print "Removed all known bike parkings."
 
-	"""Fill DB with entries from paginated API"""
+	#Fill DB with entries from paginated API
 	pagesize = 500
 	offset = 0
 	import_size = 0
@@ -47,15 +50,20 @@ def update_db():
 		resp_json = resp.json()
 		resp_size = len(resp_json)
 		print "Received %d parkings." % (resp_size)
+
+		#If this paged response has items, import them
 		if resp_size > 0:
 		    for resp_item in resp_json: cast_latlong(resp_item)
 		    print "Casted all latitude and longitude fields."
 		    import_size += insert_into_db(coll(),resp_json)
 		    offset += pagesize
 		    print "Importing... %d bike parkings so far." % import_size
+
+		#If this paged response is empty, stop fetching parkings
 		else:
 		    end_of_data = True
 
+	#Optimize database for GeoSpatial search
 	prepare_db_for_geo(coll())	    
 	import_size -= prune_db(coll())
 
@@ -63,6 +71,7 @@ def update_db():
 	return jsonify(database_size=import_size)
 
 def insert_into_db(c,item):
+	"""Insert an item into a collection"""
 	try:
 		c.insert(item)
 		return len(item)
