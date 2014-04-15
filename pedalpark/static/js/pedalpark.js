@@ -552,12 +552,13 @@
 				this.destinationView.render();
 
 				//put all bike parkings in the collection
-				this.bikeParkingsCollection.reset(model.get('locations'));
+				var allBikeParkingsCollection = new BikeParkingsCollection();
+				allBikeParkingsCollection.reset(model.get('locations'));
 
 				//render a map with all known bicycle parkings
 				this.mapView.redrawWithMarkers(
 					false,true,false,0,0,
-					this.bikeParkingsCollection.models);
+					allBikeParkingsCollection.models);
 			}
 		},
 
