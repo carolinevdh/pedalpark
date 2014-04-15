@@ -2,7 +2,7 @@
 
 	/* 	Disclaimer: this file is awfully big and I have been working to
 		complete splitting it into seperate files for Models, Views and Routers.
-		I hope to have a working seperation as soon as possible. - Caroline */
+		I hope to have a working separation as soon as possible. - Caroline */
 
 	//These variables help development when not in San Francisco, CA.
 	var FAKE_SF_LOCATION = false;
@@ -11,7 +11,7 @@
 
 	// Start PedalPark Backbone.js App
 	window.PedalParkApp = Backbone.View.extend({
-		initialize: function() {	
+		initialize: function() {
 			//Update database, and launch rest of application
 			var updateRouter = new UpdateRouter(); //routers start line 400
 		}
@@ -88,8 +88,8 @@
 			}else{
 				this.set({
 					success: true,
-					latitude : 37.390947 + Math.random(),
-					longitude : -122.393171
+					latitude : SF_LOCATION_LAT,
+					longitude : SF_LOCATION_LONG
 				});
 				console.log('Set fake position at (' + this.get('latitude') + ", " + this.get('longitude') + ').');
 			}
@@ -428,7 +428,8 @@
 				});
 			}else{
 				//database has previously been updated, proceed with application
-				var parkingRouter = new ParkingsRouter();
+				var parkingRouter = new ParkingsRouter();				
+				Backbone.history.start();
 			}
 		},
 
@@ -439,6 +440,7 @@
 			else{
 				//database is updated, proceed with application
 				var parkingRouter = new ParkingsRouter();
+				Backbone.history.start();
 			}			
 		},
 
@@ -476,18 +478,11 @@
 			this.listenTo(this.destinationModel, 'change', this.onManualDestination);
 			//catch when a user chooses a bike parking
 			this.listenTo(bikeParkingsView, 'parking:chosen', this.onParkingChosen);
+			//catch when the current location is updated
+			this.listenTo(userLocationModel, 'change', this.onLocationUpdate);
 
-			if(!FAKE_SF_LOCATION)
-				//catch when the current location is updated
-				this.listenTo(userLocationModel, 'change', this.onLocationUpdate);
-			else{
-				//(development tool: fake a location in San Francisco)
-				userLocationModel.set({
-					latitude : SF_LOCATION_LAT,
-					longitude : SF_LOCATION_LONG
-				});
-				this.onLocationUpdate(userLocationModel);
-			}
+			//(development tool: fake a location in San Francisco, manually trigger)
+			if(FAKE_SF_LOCATION) this.onLocationUpdate(userLocationModel);
 		},
 
 		/* When the user has chosen a bike parking, calculate start and end, and draw directions */
@@ -610,7 +605,10 @@
 
 		/* Error handling for unknown manual location */
 		addressGeocodeError: function(address){
-			this.noticeView.render('Oops, we have no idea where ' + address + ' is. Could you rephrase, please?');
+			if(address.length > 0)
+				this.noticeView.render('Oops, we have no idea where ' + address + ' is. Could you rephrase, please?');
+			else
+				this.noticeView.render('Oops, you didn\'t provide an address. Try again?');
 			this.destinationView.clear();
 		},
 
