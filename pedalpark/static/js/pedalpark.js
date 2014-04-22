@@ -14,6 +14,7 @@
 		initialize: function() {
 			//Update database, and launch rest of application
 			var updateRouter = new UpdateRouter(); //routers start line 400
+			Backbone.history.start();
 		}
 	});
 
@@ -428,8 +429,7 @@
 				});
 			}else{
 				//database has previously been updated, proceed with application
-				var parkingRouter = new ParkingsRouter();				
-				Backbone.history.start();
+				var parkingRouter = new ParkingsRouter();
 			}
 		},
 
@@ -440,7 +440,6 @@
 			else{
 				//database is updated, proceed with application
 				var parkingRouter = new ParkingsRouter();
-				Backbone.history.start();
 			}			
 		},
 
