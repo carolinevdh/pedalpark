@@ -5,7 +5,7 @@ require.config({
 		underscore : 'vendor/underscore',
 		backbone : 'vendor/backbone',
 		async : 'vendor/async',
-		pedalpark : 'pedalpark'
+		pedalpark : 'dist/pedalpark.min'
 	},
 	shim: {
 		backbone : {

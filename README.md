@@ -26,6 +26,8 @@ The live production environment, **Heroku**, was also entirely new to me.
 - **Backbone.js** (no previous experience), for clean MVC software design.
 - **Underscore** (no previous experience), for its templating engine.
 
+Additionally, I use **Grunt** to concatenate all JS files for Backbone Models, Views and Routers into one minified JS file, allowing for clearly seperated files at development time, and one quick loading file at production time.
+
 ###Data
 All data is provided by [San Francisco 311][1] through their SODA API url at `http://data.sfgov.org/resource/w969-5mn4.json`
 
@@ -37,6 +39,12 @@ Finding the nearest bike parking can be done by:
  - **Populating a MongoDB and using its built-in [Geospatial Indexing][2]**.
 
 ##Usage
+
+###Optional: Generate new pedalpark.min.js after edits to src/ files
+
+ 1. Install Grunt's Concat: `npm install grunt-contrib-concat`
+ 2. Install Grunt's Uglify: `npm install grunt-contrib-uglify`
+ 3. run the provided Gruntfile.js script using `grunt`
 
 ###Run on Localhost
 
@@ -86,17 +94,17 @@ And when PedalPark can't locate you automatically, it shows all bicycle parking 
 Things to attend to, given more time
 
  - Code Quality
- 	- Move Backbone MVC's into seperate files using RequireJS
- 	- Move HTML templates into seperate files
- 	- Unit test Python API
- 	- Testing, Testing, Testing
+    - ~~Move Backbone MVC's into seperate files using~~ ~~RequireJS~~  ~~Grunt~~
+    - Move HTML templates into seperate files
+    - Unit test Python API
+    - Testing, Testing, Testing
  - UX
- 	- Navigation to previous state (tip: choose 'me' as a destination in the input box)
+    - Navigation to previous state (tip: choose 'me' as a destination in the input box)
  - UI polish
  - Features
- 	- Open turn-by-turn directions in Google Maps for smartphone
- 	- In case of manual destination used, draw path from location to parking to destination
- 	- Let user pick a location on the map
+    - Open turn-by-turn directions in Google Maps for smartphone
+    - In case of manual destination used, draw path from location to parking to destination
+    - Let user pick a location on the map
 
 
 
