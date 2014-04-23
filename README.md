@@ -1,5 +1,3 @@
-<p><markdown>
-#Markdown Live Editor#
 # PedalPark
 
 A web application providing directions to the nearest bicycle parking in San Francisco, CA
@@ -148,4 +146,3 @@ Things to attend to, given more time
   [1]: https://data.sfgov.org/Transportation/Bicycle-Parking-Public-/w969-5mn4
   [2]: http://docs.mongodb.org/manual/applications/geospatial-indexes/
   [3]: http://pedalpark.herokuapp.com
-</markdown></p>
