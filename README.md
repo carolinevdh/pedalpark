@@ -1,3 +1,5 @@
+<p><markdown>
+#Markdown Live Editor#
 # PedalPark
 
 A web application providing directions to the nearest bicycle parking in San Francisco, CA
@@ -19,6 +21,13 @@ The back-end is built on the following technologies
 
 The live production environment, **Heroku**, was also entirely new to me.
 
+####Tree with most important files:
+
+    pedalpark
+    ├── pedalpark/__init__.py  -> start of Python backend
+    ├── pedalpark/data.py      -> a module
+    └── pedalpark/location.py  -> a module
+
 ###Front-end
 
 - **JavaScript** (limited previous experience).
@@ -27,6 +36,34 @@ The live production environment, **Heroku**, was also entirely new to me.
 - **Underscore** (no previous experience), for its templating engine.
 
 Additionally, I use **Grunt** to concatenate all JS files for Backbone Models, Views and Routers into one minified JS file, allowing for clearly seperated files at development time, and one quick loading file at production time.
+
+####Trees with most important files:
+
+    pedalpark/static
+    ├── pedalpark/static/css
+    ├── pedalpark/static/img
+    └── pedalpark/static/js
+        ├── pedalpark/static/js/dist
+        │   ├── pedalpark/static/js/dist/pedalpark.js
+        │   │    -> concat of all files in src/
+        │   └── pedalpark/static/js/dist/pedalpark.min.js
+        │        -> minimized version of pedalpark.js
+        ├── pedalpark/static/js/main.js
+        │    -> requirejs configuration, calls startpedalpark.js
+        ├── pedalpark/static/js/src
+        │   ├── pedalpark/static/js/src/models
+        │   │    -> seperate files for Backbone.Model objects
+        │   ├── pedalpark/static/js/src/routers
+        │   │    -> seperate files for Backbone.Router objects
+        │   ├── pedalpark/static/js/src/startpedalpark.js
+        │   │    -> entry point, calls first router
+        │   └── pedalpark/static/js/src/views
+        │        -> seperate files for Backbone.View objects
+        └── pedalpark/static/js/vendor
+
+    pedalpark/templates
+    └── pedalpark/templates/index.html
+         -> html code with templating
 
 ###Data
 All data is provided by [San Francisco 311][1] through their SODA API url at `http://data.sfgov.org/resource/w969-5mn4.json`
@@ -111,3 +148,4 @@ Things to attend to, given more time
   [1]: https://data.sfgov.org/Transportation/Bicycle-Parking-Public-/w969-5mn4
   [2]: http://docs.mongodb.org/manual/applications/geospatial-indexes/
   [3]: http://pedalpark.herokuapp.com
+</markdown></p>

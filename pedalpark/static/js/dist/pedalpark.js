@@ -5,6 +5,12 @@
  */
 
 (function() {
+/*
+ * PedalPark's Backbone.js entry point.
+ * Sets some global variables for development,
+ * starts the first router.
+ */
+
 //These variables help development when not in San Francisco, CA.
 var FAKE_SF_LOCATION = false;
 var SF_LOCATION_LAT = 37.790947;
@@ -18,7 +24,9 @@ window.PedalParkApp = Backbone.View.extend({
 		Backbone.history.start();
 	}
 });
-//Fetches all known and installed bicycle parkings
+/*
+ * Fetches all known and installed bicycle parkings from Python backend.
+ */
 var AllBikeParkingsModel = Backbone.Model.extend({
     url: function() {
         return '/all';
@@ -40,20 +48,26 @@ var BikeParkingsCollection = Backbone.Collection.extend({
  */
 var DestinationModel = Backbone.Model.extend({});
 
-//Fetches a configurable amount of bike parkings
-// close to a given (lat,long) location or address.
+/*
+ * Fetches a configurable amount of bike parkings
+ * close to a given (lat,long) location or address.
+ */
 var NearBikeParkingsModel = Backbone.Model.extend({
     url: function() {
         return '/near';
     }
 });
-//Fetches the amount of known and installed bike parkings. 
+/*
+ * Fetches the amount of known and installed bike parkings.
+ */
 var SizeModel = Backbone.Model.extend({
     url: function(){
         return '/size';
     }
 });
-//Empties the database and populates it with new data from SF 311.
+/*
+ * Empties the database and populates it with new data from SF 311.
+ */
 var UpdateModel = Backbone.Model.extend({
     url: function(){
         return '/update';
@@ -552,7 +566,8 @@ var ParkingsRouter = Backbone.Router.extend({
 });
 
 /*
- * Updates database if it's empty, handles execution of webapp according to success of update
+ * Updates database if it's empty, 
+ * handles execution of webapp according to success of update.
  */
 var UpdateRouter = Backbone.Router.extend({
     initialize: function(){
