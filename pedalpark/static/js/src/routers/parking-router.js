@@ -14,8 +14,9 @@ var ParkingsRouter = Backbone.Router.extend({
         //collection of BikeParkings
         this.bikeParkingsCollection = new BikeParkingsCollection();
 
-        //views: the map, the cascade of bicycle parking views, a notice view and the manual input form
+        //views: the map, the directions, the cascade of bicycle parking views, a notice view and the manual input form
         this.mapView = new MapView();
+        this.directionsView = new DirectionsView();
         var bikeParkingsView = new BikeParkingsView({ collection : this.bikeParkingsCollection });
         this.noticeView = new NoticeView();
         this.destinationView = new DestinationView({ model : this.destinationModel });
@@ -35,7 +36,7 @@ var ParkingsRouter = Backbone.Router.extend({
     onParkingChosen: function(model){
         var origin = [this.nearBikeParkingsModel.get('latitude'), this.nearBikeParkingsModel.get('longitude')];
         var destination = [model.get('coordinates').latitude, model.get('coordinates').longitude];
-        this.mapView.redrawWithPath(origin,destination);
+        this.mapView.redrawWithPath(origin,destination, this.directionsView);
     },
 
     /** Regarding current location calculation **/
@@ -113,7 +114,7 @@ var ParkingsRouter = Backbone.Router.extend({
     /* When the user manually inputs a location */
     onManualDestination: function(model){
         //remove Google directions, if drawn
-        if($('#directions-panel').children()[0]) $('#directions-panel').children()[0].remove();
+        this.directionsView.closePanel();
 
         //get bicycle parkings near this location
         this.nearBikeParkingsModel.fetch({
@@ -155,7 +156,7 @@ var ParkingsRouter = Backbone.Router.extend({
         if(address.length > 0)
             this.noticeView.render('Oops, we have no idea where ' + address + ' is. Could you rephrase, please?');
         else
-            this.noticeView.render('Oops, you didn\'t provide an address. Try again?');
+            this.noticeView.render('Oops, you didn\'t provide any address. Try again?');
         this.destinationView.clear();
     },
 

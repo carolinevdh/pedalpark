@@ -57,6 +57,16 @@
 			</div>
 		</script>
 
+		<!-- Directions template -->
+		<script type="text/html" id="directionspanel-template">
+			<div class="large-1 large-push-11 columns">	
+				<div id="directions-button" class="tiny button">
+					X close directions
+				</div>
+			</div>
+			<div id="directions-panel" class="large-11 large-pull-1 columns"></div>
+		</script>
+
 	</head>
 	<body>
 
@@ -84,10 +94,8 @@
 			<div id="destinationform"></div>
 		</div>
 
-		<!-- Google Directions panel -->
-		<div class="row" style="margin-bottom: 1rem">
-			<div id="directions-panel" class="small-12 columns"></div>
-		</div>
+		<!-- Insertion of Google Directions panel -->
+		<div id="directions" class="row" style="margin-bottom: 1rem"></div>
 
 		<!-- Insertion of Bike Parkings -->
 		<div class="row" id="bikeparkings"></div>

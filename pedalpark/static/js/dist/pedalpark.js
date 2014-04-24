@@ -232,6 +232,40 @@ var DestinationView = Backbone.View.extend({
     }
 });
 
+var DirectionsView = Backbone.View.extend({
+    el : $('#directions'),
+    panel : $('#directions-panel'),
+
+    events: {'click #directions-button': 'closePanel'},
+
+    initialize: function(){
+        this.template = _.template($('#directionspanel-template').html());
+    },
+
+    setDirections: function(directionsDisplay){
+        this.render();
+        this.removeDirections();
+        directionsDisplay.setPanel($('#directions-panel')[0]);
+    },
+
+    removeDirections: function(){
+        if(this.panel.children()[0])
+            this.panel.children()[0].remove();
+    },
+
+    closePanel: function(event){
+        this.removeDirections();
+        this.remove();
+    },
+
+    render: function(){
+        this.$el.html(this.template());
+    },
+
+    remove: function(){
+        this.$el.empty();
+    }
+});
 /*
  * View for Google Maps map
  */
@@ -320,15 +354,13 @@ var MapView = Backbone.View.extend({
 
 	/* Redraws map with a path between marked locations origin and destination */
 	/* Also, renders written directions as received simultaneously from Google API */
-	redrawWithPath: function(origin, destination){
+	redrawWithPath: function(origin, destination, directionsView){
 		map = new google.maps.Map(this.el, {});
 
 		//object for visual display of directions, on map and written
 		var directionsDisplay = new google.maps.DirectionsRenderer({suppressMarkers: true});
 		directionsDisplay.setMap(map);
-		////remove possible previous directions
-		if($('#directions-panel').children()[0]) $('#directions-panel').children()[0].remove();
-		directionsDisplay.setPanel($('#directions-panel')[0]);
+		directionsView.setDirections(directionsDisplay);
 
 		//set two markers based on input and save in LatLngBounds
 		var latLngBounds = new google.maps.LatLngBounds();
@@ -371,7 +403,7 @@ var MapView = Backbone.View.extend({
 
 	/* Returns a parking marker image, based on proximity to location */
 	getMarkerIcon: function(size, index){
-		if ( size < 10) return 'static/img/marker-parking-' + index + '.png';
+		if (size < 10) return 'static/img/marker-parking-' + index + '.png';
 		else return 'static/img/marker-parking.png';
 	}
 });
@@ -408,8 +440,9 @@ var ParkingsRouter = Backbone.Router.extend({
         //collection of BikeParkings
         this.bikeParkingsCollection = new BikeParkingsCollection();
 
-        //views: the map, the cascade of bicycle parking views, a notice view and the manual input form
+        //views: the map, the directions, the cascade of bicycle parking views, a notice view and the manual input form
         this.mapView = new MapView();
+        this.directionsView = new DirectionsView();
         var bikeParkingsView = new BikeParkingsView({ collection : this.bikeParkingsCollection });
         this.noticeView = new NoticeView();
         this.destinationView = new DestinationView({ model : this.destinationModel });
@@ -429,7 +462,7 @@ var ParkingsRouter = Backbone.Router.extend({
     onParkingChosen: function(model){
         var origin = [this.nearBikeParkingsModel.get('latitude'), this.nearBikeParkingsModel.get('longitude')];
         var destination = [model.get('coordinates').latitude, model.get('coordinates').longitude];
-        this.mapView.redrawWithPath(origin,destination);
+        this.mapView.redrawWithPath(origin,destination, this.directionsView);
     },
 
     /** Regarding current location calculation **/
@@ -507,7 +540,7 @@ var ParkingsRouter = Backbone.Router.extend({
     /* When the user manually inputs a location */
     onManualDestination: function(model){
         //remove Google directions, if drawn
-        if($('#directions-panel').children()[0]) $('#directions-panel').children()[0].remove();
+        this.directionsView.closePanel();
 
         //get bicycle parkings near this location
         this.nearBikeParkingsModel.fetch({
@@ -549,7 +582,7 @@ var ParkingsRouter = Backbone.Router.extend({
         if(address.length > 0)
             this.noticeView.render('Oops, we have no idea where ' + address + ' is. Could you rephrase, please?');
         else
-            this.noticeView.render('Oops, you didn\'t provide an address. Try again?');
+            this.noticeView.render('Oops, you didn\'t provide any address. Try again?');
         this.destinationView.clear();
     },
 

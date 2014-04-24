@@ -86,15 +86,13 @@ var MapView = Backbone.View.extend({
 
 	/* Redraws map with a path between marked locations origin and destination */
 	/* Also, renders written directions as received simultaneously from Google API */
-	redrawWithPath: function(origin, destination){
+	redrawWithPath: function(origin, destination, directionsView){
 		map = new google.maps.Map(this.el, {});
 
 		//object for visual display of directions, on map and written
 		var directionsDisplay = new google.maps.DirectionsRenderer({suppressMarkers: true});
 		directionsDisplay.setMap(map);
-		////remove possible previous directions
-		if($('#directions-panel').children()[0]) $('#directions-panel').children()[0].remove();
-		directionsDisplay.setPanel($('#directions-panel')[0]);
+		directionsView.setDirections(directionsDisplay);
 
 		//set two markers based on input and save in LatLngBounds
 		var latLngBounds = new google.maps.LatLngBounds();
@@ -137,7 +135,7 @@ var MapView = Backbone.View.extend({
 
 	/* Returns a parking marker image, based on proximity to location */
 	getMarkerIcon: function(size, index){
-		if ( size < 10) return 'static/img/marker-parking-' + index + '.png';
+		if (size < 10) return 'static/img/marker-parking-' + index + '.png';
 		else return 'static/img/marker-parking.png';
 	}
 });
