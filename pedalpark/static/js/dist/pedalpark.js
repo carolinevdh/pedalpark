@@ -232,68 +232,93 @@ var DestinationView = Backbone.View.extend({
     }
 });
 
+/*
+ * View for textual directions, includes close button
+ */
 var DirectionsView = Backbone.View.extend({
     el : $('#directions'),
     panel : $('#directions-panel'),
 
-    events: {'click #directions-button': 'closePanel'},
+    /* Catches click of close button */
+    events: {'click #directions-button': 'closeBtn'},
 
     initialize: function(){
         this.template = _.template($('#directionspanel-template').html());
     },
 
-    setDirections: function(directionsDisplay){
-        this.render();
-        this.removeDirections();
-        directionsDisplay.setPanel($('#directions-panel')[0]);
-    },
-
-    removeDirections: function(){
-        if(this.panel.children()[0])
-            this.panel.children()[0].remove();
-    },
-
-    closePanel: function(event){
-        this.removeDirections();
-        this.remove();
-    },
-
-    render: function(){
+    /* Set directions onto DOM element, as received packed in renderer object */
+    setDirections: function(renderer){
         this.$el.html(this.template());
+        renderer.setPanel($('#directions-panel')[0]);
     },
 
-    remove: function(){
+    /* Remove directions from DOM element */
+    removeDirections: function(){
         this.$el.empty();
+    },
+
+    /* Propagates its caught click event up, eventually reaching the NavigationView */
+    closeBtn: function(){
+        this.trigger('close', this);
     }
 });
+
 /*
  * View for Google Maps map
  */
 var MapView = Backbone.View.extend({
 	el : $('#map-canvas'),
 	initialize: function(){
-		_.bindAll(this,'redrawWithMarkers','redrawWithPath');
+		_.bindAll(this,'renderLocations','renderForPath');
+
+		//create map on window
+		map = this.getNewMap({});
+		//prepare array for markers
+		this.markers = [];
+		//LatLngBounds helps us center and zoom the map on the displayed markers
+		bounds = new google.maps.LatLngBounds();
+
+		//make map responsive
+		var center;
+		function calculateCenter() {
+			center = map.getCenter();
+		}
+		google.maps.event.addDomListener(map, 'idle', function() {
+			calculateCenter();
+		});
+		google.maps.event.addDomListener(window, 'resize', function() {
+			map.setCenter(center);
+			if(!bounds.isEmpty()) map.fitBounds(bounds);
+		});
 	},
 
-	/* Redraws map with markers, takes several arguments for style aside from actual locations */
-	redrawWithMarkers: function(doMarkLocation, doCenter, isManualLocation, lat, long, parkinglocations){
+	/* Returns a new Map object with BicyclingLayer */
+	getNewMap: function(options){
+		//create map object
+		var map = new google.maps.Map(this.el, options);
 
-		map = new google.maps.Map(this.el, { zoom : 1});
+		//add a layer with bicycle-safe streets
+		var bikeLayer = new google.maps.BicyclingLayer();
+		bikeLayer.setMap(map);
 
-		//latLngBounds helps us center and zoom the map on the displayed markers
-		var latLngBounds = new google.maps.LatLngBounds();
+		return map;
+	},
 
-		//render the main, current or manual, location
-		var mainLatLng = new google.maps.LatLng(lat, long);
-		if ( doMarkLocation ) {
-			if ( isManualLocation ) icon = 'static/img/marker-finish.png';
-			else icon = 'static/img/marker-cyclist.png';
+	/* Redraws map with markers */
+	renderLocations: function(doMarkLocation, lat, long, parkinglocations){
+		bounds = new google.maps.LatLngBounds();
+
+		//if a special location needs to be marked
+		if(doMarkLocation){
+			//prepare and mark special location
+			var mainLatLng = new google.maps.LatLng(lat, long);
 			var currentMarker = new google.maps.Marker({
 				position : mainLatLng,
 				map : map,
-				icon : icon
+				icon : this.getStartMarkerIcon()
 			});
-			latLngBounds.extend(mainLatLng);
+			this.markers.push(currentMarker);
+			bounds.extend(mainLatLng);
 		}
 
 		//render all parkinglocations
@@ -305,109 +330,180 @@ var MapView = Backbone.View.extend({
 			var parkingMarker = new google.maps.Marker({
 				position : latLng,
 				map : map,
-				icon : this.getMarkerIcon(nLocations, i+1)
+				icon : this.getParkingMarkerIcon(nLocations, i+1)
 			});
-			latLngBounds.extend(latLng);
+			this.markers.push(parkingMarker);
+			bounds.extend(latLng);
 		}
-
-		//add a layer with bicycle-safe streets
-		var bikeLayer = new google.maps.BicyclingLayer();
-		bikeLayer.setMap(map);
 
 		//make sure all markers are in view and the view is centered
-		if ( doCenter )	map.setCenter(latLngBounds.getCenter());
-		map.fitBounds(latLngBounds);
-
-		//listen to resize events, to make map responsive
-		var center;
-		function calculateCenter() {
-			center = map.getCenter();
-		}
-		google.maps.event.addDomListener(map, 'idle', function() {
-			calculateCenter();
-		});
-		google.maps.event.addDomListener(window, 'resize', function() {
-			if( doCenter ) map.setCenter(center);
-			map.fitBounds(latLngBounds);
-		});
+		map.setCenter(bounds.getCenter());
+		map.fitBounds(bounds);
 	},
 
 	/* Redraws map with a view of the world, used as loading screen and in certain fault cases */
-	redrawWorld: function(){
-		map = new google.maps.Map(this.el, {
-			zoom : 1,
-			center : new google.maps.LatLng(0,0)
-		});
-
-		//listen to resize events, to make map responsive
-		var center;
-		function calculateCenter() {
-			center = map.getCenter();
-		}
-		google.maps.event.addDomListener(map, 'idle', function() {
-			calculateCenter();
-		});
-		google.maps.event.addDomListener(window, 'resize', function() {
-			map.setCenter(center);
+	renderWorld: function(){
+		map = this.getNewMap({
+			zoom: 1,
+			center: new google.maps.LatLng(0,0)
 		});
 	},
 
 	/* Redraws map with a path between marked locations origin and destination */
-	/* Also, renders written directions as received simultaneously from Google API */
-	redrawWithPath: function(origin, destination, directionsView){
-		map = new google.maps.Map(this.el, {});
-
-		//object for visual display of directions, on map and written
-		var directionsDisplay = new google.maps.DirectionsRenderer({suppressMarkers: true});
-		directionsDisplay.setMap(map);
-		directionsView.setDirections(directionsDisplay);
+	renderForPath: function(origin, destination, renderer){
+		map = this.getNewMap({});
+		bounds = new google.maps.LatLngBounds();
 
 		//set two markers based on input and save in LatLngBounds
-		var latLngBounds = new google.maps.LatLngBounds();
-		var start = new google.maps.LatLng(origin[0],origin[1]);
 		var startMarker = new google.maps.Marker({
-				position : start,
+				position : origin,
 				map : map,
-				icon : new google.maps.MarkerImage('static/img/marker-cyclist.png')
+				icon : this.getStartMarkerIcon(false)
 		});
-		latLngBounds.extend(start);
-		var end = new google.maps.LatLng(destination[0],destination[1]);
+		this.markers.push(startMarker);
+		bounds.extend(origin);
 		var endMarker = new google.maps.Marker({
-				position : end,
+				position : destination,
 				map : map,
-				icon : new google.maps.MarkerImage('static/img/marker-parking.png')
+				icon : this.getDefaultParkingMarkerIcon()
 		});
-		latLngBounds.extend(end);
+		this.markers.push(endMarker);
+		bounds.extend(destination);
 
-		//zoom and center map to markers
-		map.fitBounds(latLngBounds);
+		//make sure all markers are in view and the view is centered
+		map.setCenter(bounds.getCenter());
+		map.fitBounds(bounds);
 
-		//add a layer with bicycle-safe streets
-		var bikeLayer = new google.maps.BicyclingLayer();
-		bikeLayer.setMap(map);
-
-		//prepare and execute directions request to Google
-		var request = {
-			origin: start,
-			destination: end,
-			travelMode: google.maps.TravelMode.BICYCLING
-		};
-		var directionsService = new google.maps.DirectionsService();
-		directionsService.route(request, function(result, status) {
-			if (status == google.maps.DirectionsStatus.OK) {
-				//directions received, render on map and in written form
-				directionsDisplay.setDirections(result);
-			}
-		});
+		//render path received from Google API
+		renderer.setMap(map);
 	},
 
-	/* Returns a parking marker image, based on proximity to location */
-	getMarkerIcon: function(size, index){
+	/* Removes path and markers */
+	clearOverlays: function(renderer){
+		if(renderer !== undefined) renderer.setMap(null);
+		this.removeMarkers();
+	},
+
+	/* Removes map from all markers */
+	removeMarkers: function(){
+		for(var i = 0; i < this.markers.length; i++)
+			this.markers[i].setMap(null);
+		this.markers.length = 0;
+	},
+
+	/* Returns url for starting marker icon */
+	getStartMarkerIcon: function(){
+		return 'static/img/marker-cyclist.png';
+	},
+
+	/* Returns url for a parking marker icon, based on proximity to location */
+	getParkingMarkerIcon: function(size, index){
 		if (size < 10) return 'static/img/marker-parking-' + index + '.png';
-		else return 'static/img/marker-parking.png';
+		else return this.getDefaultParkingMarkerIcon();
+	},
+
+	/* Returns url for standard parking marker icon */
+	getDefaultParkingMarkerIcon: function(){
+		return 'static/img/marker-parking.png';
 	}
 });
 	
+/*
+ * View combining MapView and DirectionsView
+ */
+var NavigationView = Backbone.View.extend({
+
+    initialize: function(){
+        _.bindAll(this,'renderLocations','onRouteReceived','restoreLocations');
+
+        this.mapView = new MapView();
+        this.mapView.renderWorld();
+        this.directionsView = new DirectionsView();
+
+        //catch when close button in directionsView is clicked
+        this.listenTo(this.directionsView,'close',this.restoreLocations);
+    },
+
+    /* Redraws map with a view of the world */
+    renderWorld: function(){
+        this.mapView.renderWorld();
+    },
+
+    /* Redraws map with markers */
+    renderLocations: function(doMarkLocation, lat, lon, locations){
+        //save location settings to model, for usage when directions are closed
+        this.latitude = lat;
+        this.longitude = lon;
+        this.locations = locations;
+
+        //render map with locations
+        this.mapView.renderLocations(
+            true,
+            this.latitude,
+            this.longitude,
+            this.locations
+        );
+    },
+
+    /* Fetches directions from Google API, renders map and directions after */
+    renderDirections: function(origin, destination){
+       //prepare directions request
+        var request = {
+            origin: new google.maps.LatLng(origin[0],origin[1]),
+            destination: new google.maps.LatLng(destination[0],destination[1]),
+            travelMode: google.maps.TravelMode.BICYCLING
+        };
+
+        //send directions request to Google
+        var directionsService = new google.maps.DirectionsService();
+        directionsService.route(request, this.onRouteReceived);
+    },
+
+    /* Removes directions displayed */
+    removeDirections: function(){
+        this.directionsView.removeDirections();
+    },
+
+    /* Removes path and markers drawn on map */
+    removeMapOverlays: function(){
+        this.mapView.clearOverlays(this.renderer);
+    },
+
+    /* When directions are received succesfully from Google */
+    onRouteReceived: function(result, status){
+        if (status == google.maps.DirectionsStatus.OK) {
+            //renderer object helps populate the map and the directions
+            this.renderer = new google.maps.DirectionsRenderer({
+                suppressMarkers: true
+            });
+
+            //prepare map
+            var origin = result.routes[0].legs[0].start_location;
+            var destination = result.routes[0].legs[0].end_location;
+            this.mapView.renderForPath(origin, destination, this.renderer);
+            //prepare directions
+            this.directionsView.setDirections(this.renderer);
+
+            //plug result in to renderer
+            this.renderer.setDirections(result);
+        }
+    },
+
+    /* Removes everything related to given directions,
+       reverts map to view with several locations */
+    restoreLocations: function(){
+        this.removeDirections();
+        this.removeMapOverlays();
+
+        this.mapView.renderLocations(
+            true,
+            this.latitude,
+            this.longitude,
+            this.locations
+        );
+    }
+});
+
 /*
  * Simple View rendering greetings and application messages for user
  */
@@ -432,27 +528,26 @@ var ParkingsRouter = Backbone.Router.extend({
         _.bindAll(this,'onManualDestination','onLocationUpdate','manualParkingFetchSuccess',
             'nearParkingFetchSuccess','allParkingFetchSuccess','parkingFetchError','onParkingChosen');
 
-        //models: for current and manual location, and for bike parkings near a location
-        var userLocationModel = new UserLocationModel();        
+        //models: for current and manual location, for bike parkings near a location
+        var userLocationModel = new UserLocationModel();
         this.destinationModel = new DestinationModel();
         this.nearBikeParkingsModel = new NearBikeParkingsModel();
 
         //collection of BikeParkings
         this.bikeParkingsCollection = new BikeParkingsCollection();
 
-        //views: the map, the directions, the cascade of bicycle parking views, a notice view and the manual input form
-        this.mapView = new MapView();
-        this.directionsView = new DirectionsView();
+        //views: the map & the directions, the cascade of bicycle parking views, a notice view and the manual input form
+        this.navigationView = new NavigationView();
         var bikeParkingsView = new BikeParkingsView({ collection : this.bikeParkingsCollection });
         this.noticeView = new NoticeView();
         this.destinationView = new DestinationView({ model : this.destinationModel });
 
+        //catch when the current location is updated
+        this.listenTo(userLocationModel, 'change', this.onLocationUpdate);
         //catch when user requests a manual location
         this.listenTo(this.destinationModel, 'change', this.onManualDestination);
         //catch when a user chooses a bike parking
         this.listenTo(bikeParkingsView, 'parking:chosen', this.onParkingChosen);
-        //catch when the current location is updated
-        this.listenTo(userLocationModel, 'change', this.onLocationUpdate);
 
         //(development tool: fake a location in San Francisco, manually trigger)
         if(FAKE_SF_LOCATION) this.onLocationUpdate(userLocationModel);
@@ -462,7 +557,7 @@ var ParkingsRouter = Backbone.Router.extend({
     onParkingChosen: function(model){
         var origin = [this.nearBikeParkingsModel.get('latitude'), this.nearBikeParkingsModel.get('longitude')];
         var destination = [model.get('coordinates').latitude, model.get('coordinates').longitude];
-        this.mapView.redrawWithPath(origin,destination, this.directionsView);
+        this.navigationView.renderDirections(origin, destination);
     },
 
     /** Regarding current location calculation **/
@@ -506,8 +601,8 @@ var ParkingsRouter = Backbone.Router.extend({
             this.bikeParkingsCollection.reset(model.get('locations'));
 
             //update Google map with new current location and bike parkings
-            this.mapView.redrawWithMarkers(
-                true,true,false,
+            this.navigationView.renderLocations(
+                true,
                 model.get('latitude'),
                 model.get('longitude'),
                 this.bikeParkingsCollection.models
@@ -529,8 +624,8 @@ var ParkingsRouter = Backbone.Router.extend({
             allBikeParkingsCollection.reset(model.get('locations'));
 
             //render a map with all known bicycle parkings
-            this.mapView.redrawWithMarkers(
-                false,true,false,0,0,
+            this.navigationView.renderLocations(
+                false,0,0,
                 allBikeParkingsCollection.models);
         }
     },
@@ -539,8 +634,9 @@ var ParkingsRouter = Backbone.Router.extend({
 
     /* When the user manually inputs a location */
     onManualDestination: function(model){
-        //remove Google directions, if drawn
-        this.directionsView.closePanel();
+        //remove Google directions and map markers and path
+        this.navigationView.removeDirections();
+        this.navigationView.removeMapOverlays();
 
         //get bicycle parkings near this location
         this.nearBikeParkingsModel.fetch({
@@ -551,7 +647,7 @@ var ParkingsRouter = Backbone.Router.extend({
             success : this.manualParkingFetchSuccess,
             error : this.parkingFetchError
         });
-    },      
+    },
 
     /* When the /near API call with address returns */
     manualParkingFetchSuccess: function(model){
@@ -565,8 +661,8 @@ var ParkingsRouter = Backbone.Router.extend({
             this.bikeParkingsCollection.reset(model.get('locations'));
 
             //update Google Map with new current location and bike parkings
-            this.mapView.redrawWithMarkers(
-                true,true,true,
+            this.navigationView.renderLocations(
+                true,
                 model.get('latitude'),
                 model.get('longitude'),
                 this.bikeParkingsCollection.models
@@ -594,7 +690,7 @@ var ParkingsRouter = Backbone.Router.extend({
         this.destinationView.render();
 
         //render a map of the world
-        this.mapView.renderWorld();
+        this.navigationView.renderWorld();
     }
 });
 
@@ -607,9 +703,8 @@ var UpdateRouter = Backbone.Router.extend({
         _.bindAll(this,'onSizeReceived','onUpdateSuccess','onUpdateError');
 
         //start the application with a map of the world
-        this.mapView = new MapView();
-        this.mapView.redrawWorld();
-        this.mapView.render();
+        var mapView = new MapView();
+        mapView.renderWorld();
 
         //...and a 'loading' message
         this.noticeView = new NoticeView();
@@ -635,14 +730,14 @@ var UpdateRouter = Backbone.Router.extend({
         }
     },
 
-    /* When /update call to back-end succeeds... */ 
+    /* When /update call to back-end succeeds... */
     onUpdateSuccess: function(model){
         //display an error if no parkings were loaded into the database
         if( model.get('size') <= 0) this.onUpdateError();
         else{
             //database is updated, proceed with application
             var parkingRouter = new ParkingsRouter();
-        }           
+        }
     },
 
     /* When an update was needed and failed, a message displays and sadly, nothing new will happen. */
@@ -650,6 +745,5 @@ var UpdateRouter = Backbone.Router.extend({
         this.noticeView.render('Uh-oh. It looks like the server has a flat. Unfortunately, PedalPark is not going to work now.');
         //Either the data source is unreachable or the database is. Execution of the page stops here.
     }
-    
 });
 }());

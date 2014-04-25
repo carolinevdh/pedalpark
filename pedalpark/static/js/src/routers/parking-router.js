@@ -6,27 +6,26 @@ var ParkingsRouter = Backbone.Router.extend({
         _.bindAll(this,'onManualDestination','onLocationUpdate','manualParkingFetchSuccess',
             'nearParkingFetchSuccess','allParkingFetchSuccess','parkingFetchError','onParkingChosen');
 
-        //models: for current and manual location, and for bike parkings near a location
-        var userLocationModel = new UserLocationModel();        
+        //models: for current and manual location, for bike parkings near a location
+        var userLocationModel = new UserLocationModel();
         this.destinationModel = new DestinationModel();
         this.nearBikeParkingsModel = new NearBikeParkingsModel();
 
         //collection of BikeParkings
         this.bikeParkingsCollection = new BikeParkingsCollection();
 
-        //views: the map, the directions, the cascade of bicycle parking views, a notice view and the manual input form
-        this.mapView = new MapView();
-        this.directionsView = new DirectionsView();
+        //views: the map & the directions, the cascade of bicycle parking views, a notice view and the manual input form
+        this.navigationView = new NavigationView();
         var bikeParkingsView = new BikeParkingsView({ collection : this.bikeParkingsCollection });
         this.noticeView = new NoticeView();
         this.destinationView = new DestinationView({ model : this.destinationModel });
 
+        //catch when the current location is updated
+        this.listenTo(userLocationModel, 'change', this.onLocationUpdate);
         //catch when user requests a manual location
         this.listenTo(this.destinationModel, 'change', this.onManualDestination);
         //catch when a user chooses a bike parking
         this.listenTo(bikeParkingsView, 'parking:chosen', this.onParkingChosen);
-        //catch when the current location is updated
-        this.listenTo(userLocationModel, 'change', this.onLocationUpdate);
 
         //(development tool: fake a location in San Francisco, manually trigger)
         if(FAKE_SF_LOCATION) this.onLocationUpdate(userLocationModel);
@@ -36,7 +35,7 @@ var ParkingsRouter = Backbone.Router.extend({
     onParkingChosen: function(model){
         var origin = [this.nearBikeParkingsModel.get('latitude'), this.nearBikeParkingsModel.get('longitude')];
         var destination = [model.get('coordinates').latitude, model.get('coordinates').longitude];
-        this.mapView.redrawWithPath(origin,destination, this.directionsView);
+        this.navigationView.renderDirections(origin, destination);
     },
 
     /** Regarding current location calculation **/
@@ -80,8 +79,8 @@ var ParkingsRouter = Backbone.Router.extend({
             this.bikeParkingsCollection.reset(model.get('locations'));
 
             //update Google map with new current location and bike parkings
-            this.mapView.redrawWithMarkers(
-                true,true,false,
+            this.navigationView.renderLocations(
+                true,
                 model.get('latitude'),
                 model.get('longitude'),
                 this.bikeParkingsCollection.models
@@ -103,8 +102,8 @@ var ParkingsRouter = Backbone.Router.extend({
             allBikeParkingsCollection.reset(model.get('locations'));
 
             //render a map with all known bicycle parkings
-            this.mapView.redrawWithMarkers(
-                false,true,false,0,0,
+            this.navigationView.renderLocations(
+                false,0,0,
                 allBikeParkingsCollection.models);
         }
     },
@@ -113,8 +112,9 @@ var ParkingsRouter = Backbone.Router.extend({
 
     /* When the user manually inputs a location */
     onManualDestination: function(model){
-        //remove Google directions, if drawn
-        this.directionsView.closePanel();
+        //remove Google directions and map markers and path
+        this.navigationView.removeDirections();
+        this.navigationView.removeMapOverlays();
 
         //get bicycle parkings near this location
         this.nearBikeParkingsModel.fetch({
@@ -125,7 +125,7 @@ var ParkingsRouter = Backbone.Router.extend({
             success : this.manualParkingFetchSuccess,
             error : this.parkingFetchError
         });
-    },      
+    },
 
     /* When the /near API call with address returns */
     manualParkingFetchSuccess: function(model){
@@ -139,8 +139,8 @@ var ParkingsRouter = Backbone.Router.extend({
             this.bikeParkingsCollection.reset(model.get('locations'));
 
             //update Google Map with new current location and bike parkings
-            this.mapView.redrawWithMarkers(
-                true,true,true,
+            this.navigationView.renderLocations(
+                true,
                 model.get('latitude'),
                 model.get('longitude'),
                 this.bikeParkingsCollection.models
@@ -168,6 +168,6 @@ var ParkingsRouter = Backbone.Router.extend({
         this.destinationView.render();
 
         //render a map of the world
-        this.mapView.renderWorld();
+        this.navigationView.renderWorld();
     }
 });

@@ -133,8 +133,8 @@ Things to attend to, given more time
     - Move HTML templates into seperate files
     - Unit test Python API
     - Testing, Testing, Testing
- - UX
-    - Navigation to previous state (tip: choose 'me' as a destination in the input box)
+ - ~~UX~~
+    - ~~Navigation to previous state (tip: choose 'me' as a destination in the input box)~~
  - UI polish
  - Features
     - Open turn-by-turn directions in Google Maps for smartphone

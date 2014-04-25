@@ -4,28 +4,56 @@
 var MapView = Backbone.View.extend({
 	el : $('#map-canvas'),
 	initialize: function(){
-		_.bindAll(this,'redrawWithMarkers','redrawWithPath');
+		_.bindAll(this,'renderLocations','renderForPath');
+
+		//create map on window
+		map = this.getNewMap({});
+		//prepare array for markers
+		this.markers = [];
+		//LatLngBounds helps us center and zoom the map on the displayed markers
+		bounds = new google.maps.LatLngBounds();
+
+		//make map responsive
+		var center;
+		function calculateCenter() {
+			center = map.getCenter();
+		}
+		google.maps.event.addDomListener(map, 'idle', function() {
+			calculateCenter();
+		});
+		google.maps.event.addDomListener(window, 'resize', function() {
+			map.setCenter(center);
+			if(!bounds.isEmpty()) map.fitBounds(bounds);
+		});
 	},
 
-	/* Redraws map with markers, takes several arguments for style aside from actual locations */
-	redrawWithMarkers: function(doMarkLocation, doCenter, isManualLocation, lat, long, parkinglocations){
+	/* Returns a new Map object with BicyclingLayer */
+	getNewMap: function(options){
+		//create map object
+		var map = new google.maps.Map(this.el, options);
 
-		map = new google.maps.Map(this.el, { zoom : 1});
+		//add a layer with bicycle-safe streets
+		var bikeLayer = new google.maps.BicyclingLayer();
+		bikeLayer.setMap(map);
 
-		//latLngBounds helps us center and zoom the map on the displayed markers
-		var latLngBounds = new google.maps.LatLngBounds();
+		return map;
+	},
 
-		//render the main, current or manual, location
-		var mainLatLng = new google.maps.LatLng(lat, long);
-		if ( doMarkLocation ) {
-			if ( isManualLocation ) icon = 'static/img/marker-finish.png';
-			else icon = 'static/img/marker-cyclist.png';
+	/* Redraws map with markers */
+	renderLocations: function(doMarkLocation, lat, long, parkinglocations){
+		bounds = new google.maps.LatLngBounds();
+
+		//if a special location needs to be marked
+		if(doMarkLocation){
+			//prepare and mark special location
+			var mainLatLng = new google.maps.LatLng(lat, long);
 			var currentMarker = new google.maps.Marker({
 				position : mainLatLng,
 				map : map,
-				icon : icon
+				icon : this.getStartMarkerIcon()
 			});
-			latLngBounds.extend(mainLatLng);
+			this.markers.push(currentMarker);
+			bounds.extend(mainLatLng);
 		}
 
 		//render all parkinglocations
@@ -37,106 +65,81 @@ var MapView = Backbone.View.extend({
 			var parkingMarker = new google.maps.Marker({
 				position : latLng,
 				map : map,
-				icon : this.getMarkerIcon(nLocations, i+1)
+				icon : this.getParkingMarkerIcon(nLocations, i+1)
 			});
-			latLngBounds.extend(latLng);
+			this.markers.push(parkingMarker);
+			bounds.extend(latLng);
 		}
-
-		//add a layer with bicycle-safe streets
-		var bikeLayer = new google.maps.BicyclingLayer();
-		bikeLayer.setMap(map);
 
 		//make sure all markers are in view and the view is centered
-		if ( doCenter )	map.setCenter(latLngBounds.getCenter());
-		map.fitBounds(latLngBounds);
-
-		//listen to resize events, to make map responsive
-		var center;
-		function calculateCenter() {
-			center = map.getCenter();
-		}
-		google.maps.event.addDomListener(map, 'idle', function() {
-			calculateCenter();
-		});
-		google.maps.event.addDomListener(window, 'resize', function() {
-			if( doCenter ) map.setCenter(center);
-			map.fitBounds(latLngBounds);
-		});
+		map.setCenter(bounds.getCenter());
+		map.fitBounds(bounds);
 	},
 
 	/* Redraws map with a view of the world, used as loading screen and in certain fault cases */
-	redrawWorld: function(){
-		map = new google.maps.Map(this.el, {
-			zoom : 1,
-			center : new google.maps.LatLng(0,0)
-		});
-
-		//listen to resize events, to make map responsive
-		var center;
-		function calculateCenter() {
-			center = map.getCenter();
-		}
-		google.maps.event.addDomListener(map, 'idle', function() {
-			calculateCenter();
-		});
-		google.maps.event.addDomListener(window, 'resize', function() {
-			map.setCenter(center);
+	renderWorld: function(){
+		map = this.getNewMap({
+			zoom: 1,
+			center: new google.maps.LatLng(0,0)
 		});
 	},
 
 	/* Redraws map with a path between marked locations origin and destination */
-	/* Also, renders written directions as received simultaneously from Google API */
-	redrawWithPath: function(origin, destination, directionsView){
-		map = new google.maps.Map(this.el, {});
-
-		//object for visual display of directions, on map and written
-		var directionsDisplay = new google.maps.DirectionsRenderer({suppressMarkers: true});
-		directionsDisplay.setMap(map);
-		directionsView.setDirections(directionsDisplay);
+	renderForPath: function(origin, destination, renderer){
+		map = this.getNewMap({});
+		bounds = new google.maps.LatLngBounds();
 
 		//set two markers based on input and save in LatLngBounds
-		var latLngBounds = new google.maps.LatLngBounds();
-		var start = new google.maps.LatLng(origin[0],origin[1]);
 		var startMarker = new google.maps.Marker({
-				position : start,
+				position : origin,
 				map : map,
-				icon : new google.maps.MarkerImage('static/img/marker-cyclist.png')
+				icon : this.getStartMarkerIcon(false)
 		});
-		latLngBounds.extend(start);
-		var end = new google.maps.LatLng(destination[0],destination[1]);
+		this.markers.push(startMarker);
+		bounds.extend(origin);
 		var endMarker = new google.maps.Marker({
-				position : end,
+				position : destination,
 				map : map,
-				icon : new google.maps.MarkerImage('static/img/marker-parking.png')
+				icon : this.getDefaultParkingMarkerIcon()
 		});
-		latLngBounds.extend(end);
+		this.markers.push(endMarker);
+		bounds.extend(destination);
 
-		//zoom and center map to markers
-		map.fitBounds(latLngBounds);
+		//make sure all markers are in view and the view is centered
+		map.setCenter(bounds.getCenter());
+		map.fitBounds(bounds);
 
-		//add a layer with bicycle-safe streets
-		var bikeLayer = new google.maps.BicyclingLayer();
-		bikeLayer.setMap(map);
-
-		//prepare and execute directions request to Google
-		var request = {
-			origin: start,
-			destination: end,
-			travelMode: google.maps.TravelMode.BICYCLING
-		};
-		var directionsService = new google.maps.DirectionsService();
-		directionsService.route(request, function(result, status) {
-			if (status == google.maps.DirectionsStatus.OK) {
-				//directions received, render on map and in written form
-				directionsDisplay.setDirections(result);
-			}
-		});
+		//render path received from Google API
+		renderer.setMap(map);
 	},
 
-	/* Returns a parking marker image, based on proximity to location */
-	getMarkerIcon: function(size, index){
+	/* Removes path and markers */
+	clearOverlays: function(renderer){
+		if(renderer !== undefined) renderer.setMap(null);
+		this.removeMarkers();
+	},
+
+	/* Removes map from all markers */
+	removeMarkers: function(){
+		for(var i = 0; i < this.markers.length; i++)
+			this.markers[i].setMap(null);
+		this.markers.length = 0;
+	},
+
+	/* Returns url for starting marker icon */
+	getStartMarkerIcon: function(){
+		return 'static/img/marker-cyclist.png';
+	},
+
+	/* Returns url for a parking marker icon, based on proximity to location */
+	getParkingMarkerIcon: function(size, index){
 		if (size < 10) return 'static/img/marker-parking-' + index + '.png';
-		else return 'static/img/marker-parking.png';
+		else return this.getDefaultParkingMarkerIcon();
+	},
+
+	/* Returns url for standard parking marker icon */
+	getDefaultParkingMarkerIcon: function(){
+		return 'static/img/marker-parking.png';
 	}
 });
 	

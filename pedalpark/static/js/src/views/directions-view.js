@@ -1,34 +1,30 @@
+/*
+ * View for textual directions, includes close button
+ */
 var DirectionsView = Backbone.View.extend({
     el : $('#directions'),
     panel : $('#directions-panel'),
 
-    events: {'click #directions-button': 'closePanel'},
+    /* Catches click of close button */
+    events: {'click #directions-button': 'closeBtn'},
 
     initialize: function(){
         this.template = _.template($('#directionspanel-template').html());
     },
 
-    setDirections: function(directionsDisplay){
-        this.render();
-        this.removeDirections();
-        directionsDisplay.setPanel($('#directions-panel')[0]);
-    },
-
-    removeDirections: function(){
-        if(this.panel.children()[0])
-            this.panel.children()[0].remove();
-    },
-
-    closePanel: function(event){
-        this.removeDirections();
-        this.remove();
-    },
-
-    render: function(){
+    /* Set directions onto DOM element, as received packed in renderer object */
+    setDirections: function(renderer){
         this.$el.html(this.template());
+        renderer.setPanel($('#directions-panel')[0]);
     },
 
-    remove: function(){
+    /* Remove directions from DOM element */
+    removeDirections: function(){
         this.$el.empty();
+    },
+
+    /* Propagates its caught click event up, eventually reaching the NavigationView */
+    closeBtn: function(){
+        this.trigger('close', this);
     }
 });

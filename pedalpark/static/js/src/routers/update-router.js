@@ -7,9 +7,8 @@ var UpdateRouter = Backbone.Router.extend({
         _.bindAll(this,'onSizeReceived','onUpdateSuccess','onUpdateError');
 
         //start the application with a map of the world
-        this.mapView = new MapView();
-        this.mapView.redrawWorld();
-        this.mapView.render();
+        var mapView = new MapView();
+        mapView.renderWorld();
 
         //...and a 'loading' message
         this.noticeView = new NoticeView();
@@ -35,14 +34,14 @@ var UpdateRouter = Backbone.Router.extend({
         }
     },
 
-    /* When /update call to back-end succeeds... */ 
+    /* When /update call to back-end succeeds... */
     onUpdateSuccess: function(model){
         //display an error if no parkings were loaded into the database
         if( model.get('size') <= 0) this.onUpdateError();
         else{
             //database is updated, proceed with application
             var parkingRouter = new ParkingsRouter();
-        }           
+        }
     },
 
     /* When an update was needed and failed, a message displays and sadly, nothing new will happen. */
@@ -50,5 +49,4 @@ var UpdateRouter = Backbone.Router.extend({
         this.noticeView.render('Uh-oh. It looks like the server has a flat. Unfortunately, PedalPark is not going to work now.');
         //Either the data source is unreachable or the database is. Execution of the page stops here.
     }
-    
 });
