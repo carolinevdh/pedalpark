@@ -68,7 +68,7 @@ def address_from_latlong(latitude, longitude):
 
 def serialize_locations(locations, latitude, longitude, address):
     """Prepare JSON output based on collection of documents"""
-    if locations:
+    if locations.count():
         return json_util.dumps({
             'success': True, 'locations': locations,
             'latitude': latitude, 'longitude': longitude,
