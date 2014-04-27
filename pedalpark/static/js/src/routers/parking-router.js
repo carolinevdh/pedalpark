@@ -38,6 +38,10 @@ var ParkingRouter = Backbone.Router.extend({
 
     //catch when the current location is updated
     this.listenTo(userLocationModel, 'change', this.onLocationUpdate);
+    //catch when user requests its own current location, calculate location
+    this.listenTo(this.destinationView, 'location:calculate', function locate(){
+      userLocationModel.updateLocation();
+    });
     //catch when user requests a manual location
     this.listenTo(this.destinationModel, 'change', this.onManualDestination);
     //catch when a user chooses a bike parking
@@ -72,6 +76,9 @@ var ParkingRouter = Backbone.Router.extend({
    * @param <UserLocationModel> model
    */
   onLocationUpdate: function(model) {
+    this.navigationView.removeMapOverlays();
+    this.navigationView.removeDirections();
+
     //if a location exists for the user
     if (model.get('success')) {
       //fetch new bike parkings based on (lat,long)

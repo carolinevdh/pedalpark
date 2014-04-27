@@ -277,7 +277,8 @@ var BikeParkingsView = Backbone.View.extend({
 });
 
 /*
- * View rendering input box and submit button, 
+ * View rendering locate me button 
+ * and form with input box and submit button, 
  * allowing user to pick a location by typing an address.
  */
 
@@ -285,8 +286,13 @@ var DestinationView = Backbone.View.extend({
 
   el : $('#destinationform'),
 
-  /* Catches submission of form */
-  events: { 'submit form#frm-destination' : 'setDestination' },
+  
+  events: {
+    /* Catches submission of form */
+    'submit form#frm-destination' : 'setDestination',
+    /* Catches clicking of locate me button */
+    'click #locateme-button' : 'calculateLocation'
+  },
 
   initialize: function() {
     _.bindAll(this, 'render', 'setDestination');
@@ -312,6 +318,14 @@ var DestinationView = Backbone.View.extend({
     event.preventDefault();
     var destination = $('#destination').val();
     this.model.set('address',destination);
+  },
+
+  /* 
+   * Bubbles the caught 'locate-me' click event up, 
+   * eventually reaching the Router.
+   */
+  calculateLocation: function() {
+    this.trigger('location:calculate');
   }
 });
 
@@ -712,6 +726,10 @@ var ParkingRouter = Backbone.Router.extend({
 
     //catch when the current location is updated
     this.listenTo(userLocationModel, 'change', this.onLocationUpdate);
+    //catch when user requests its own current location, calculate location
+    this.listenTo(this.destinationView, 'location:calculate', function locate(){
+      userLocationModel.updateLocation();
+    });
     //catch when user requests a manual location
     this.listenTo(this.destinationModel, 'change', this.onManualDestination);
     //catch when a user chooses a bike parking
@@ -746,6 +764,9 @@ var ParkingRouter = Backbone.Router.extend({
    * @param <UserLocationModel> model
    */
   onLocationUpdate: function(model) {
+    this.navigationView.removeMapOverlays();
+    this.navigationView.removeDirections();
+
     //if a location exists for the user
     if (model.get('success')) {
       //fetch new bike parkings based on (lat,long)

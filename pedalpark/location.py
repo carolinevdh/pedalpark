@@ -69,7 +69,6 @@ def address_from_latlong(latitude, longitude):
 
 def serialize_locations(locations, latitude, longitude, address):
     """Prepare JSON output based on collection of documents"""
-    print locations
     try:
         size = locations.count()
     except pymongo.errors.OperationFailure, e:

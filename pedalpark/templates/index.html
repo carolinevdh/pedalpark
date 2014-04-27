@@ -20,7 +20,6 @@
 							<dt><%= parking.location_name %></dt>
 							<dd>
 								it&#39;s a <%= parking.placement.toLowerCase() %> <%= parking.bike_parking.toLowerCase() %>
-
 							<% if (parking.yr_inst && parking.yr_inst.toLowerCase() != 'none') { %>
 								at <%= parking.yr_inst %>
 								<br />
@@ -46,8 +45,13 @@
 		<!-- Custom Destination template -->
 		<script type="text/html" id="destinationform-template">
 			<div class="large-5 columns">
+				<div class="small-2 columns">
+					<div id="locateme-button" class="button prefix">
+						Me
+					</div>
+				</div>
 				<form id="frm-destination">
-					<div class="small-10 columns">
+					<div class="small-8 columns">
 						<input type="text" id="destination" placeholder="Set your own destination instead."/>
 					</div>
 					<div class="small-2 columns">
