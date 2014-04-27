@@ -780,7 +780,7 @@ var ParkingRouter = Backbone.Router.extend({
     if (!model.get('success')) this.parkingFetchError();
     else {
       this.noticeView.render(
-        'Hi! Here are some bicycle parkings,' +
+        'Hi! Here are some bicycle parkings, ' +
         'close to your current location. Pick one to get directions.'
       );
       this.destinationView.render();
@@ -808,7 +808,7 @@ var ParkingRouter = Backbone.Router.extend({
     if (!model.get('success')) this.parkingFetchError();
     else {
       this.noticeView.render(
-        'Oops, we couldn\'t find your location. Either way,' +
+        'Oops, we couldn\'t find your location. Either way, ' +
         'here are all bicycle parkings in San Francisco!' +
         'Please enable location awareness in your browser.'
       );
