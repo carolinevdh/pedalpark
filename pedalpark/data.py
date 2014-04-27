@@ -15,7 +15,7 @@ def coll():
 
 def geo_find_db(c,attr,latitude,longitude,count):
     """Perform GeoSpatial search, based on (lat,long) coordinate"""
-    return c.find({attr: {'$near': [latitude,longitude]}}).limit(count)
+    return c.find({attr: {'$near' : [latitude,longitude]}}).limit(count)
 
 def find_db(c):
     """Return all documents in collection"""
@@ -50,11 +50,10 @@ def update_db():
         url_args = "?$limit=%d&$offset=%d" % (pagesize,offset)
         resp = get(url_base + url_args)
         resp_json = resp.json()
-        resp_size = len(resp_json)
-        print "Received %d parkings." % (resp_size)
+        print "Received %d parkings." % (len(resp_json))
 
         #If this paged response has items, import them
-        if resp_size > 0:
+        if resp_json:
             for resp_item in resp_json: cast_latlong(resp_item)
             import_size += insert_into_db(coll(),resp_json)
             offset += pagesize
@@ -64,9 +63,9 @@ def update_db():
         else:
             end_of_data = True
 
-    #Optimize database for GeoSpatial search
-    prepare_db_for_geo(coll())        
+    #Optimize database for GeoSpatial search    
     import_size -= prune_db(coll())
+    prepare_db_for_geo(coll())        
 
     print "%d installed bike parkings imported." % (import_size)
     return jsonify(database_size=import_size)
@@ -77,7 +76,7 @@ def insert_into_db(c,item):
         c.insert(item)
         return len(item)
     except:
-        print "Unexpected error when inserting into db:", exc_info()
+        print "Error when inserting into db:", exc_info()
 
 def prune_db(c):
     """Remove all not installed bike parkings from database"""
@@ -101,6 +100,7 @@ def prepare_db_for_geo(c):
 
 def cast_latlong(item):
     """MongoDB GeoSpatial Indexing requires float values of (lat,long)"""
-    coordinates = item["coordinates"]
-    coordinates["latitude"] = float(coordinates["latitude"])
-    coordinates["longitude"] = float(coordinates["longitude"])
+    if 'coordinates' in item:
+        coordinates = item["coordinates"]
+        coordinates["latitude"] = float(coordinates["latitude"])
+        coordinates["longitude"] = float(coordinates["longitude"])

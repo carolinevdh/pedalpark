@@ -2,6 +2,8 @@ from flask import request, jsonify
 from pygeocoder import Geocoder, GeocoderError
 from bson import json_util
 
+import pymongo
+
 from pedalpark import app, data
 
 """ All location related methods """
@@ -46,9 +48,8 @@ def size():
 
 def find_nearest_neighbours(latitude, longitude, count):
     """Query collection for X bike parkings closest to (lat, long)"""
-    neighbours = data.geo_find_db(
-                    data.coll(),'coordinates',latitude,longitude,count)
-    return neighbours
+    return data.geo_find_db(
+                data.coll(),'coordinates',latitude,longitude,count)
 
 def latlong_from_address(address):
     """Get (lat, long) location from human-readable address."""
@@ -68,7 +69,13 @@ def address_from_latlong(latitude, longitude):
 
 def serialize_locations(locations, latitude, longitude, address):
     """Prepare JSON output based on collection of documents"""
-    if locations.count():
+    print locations
+    try:
+        size = locations.count()
+    except pymongo.errors.OperationFailure, e:
+        print 'Error accessing MongoDB documents: ', e
+        return jsonify(success=False, reason='mongodb_operationfailure')
+    if size:
         return json_util.dumps({
             'success': True, 'locations': locations,
             'latitude': latitude, 'longitude': longitude,
