@@ -1,9 +1,14 @@
 /*
- * simple Model for a single bicycle parking location, 
- * including a Collection of parkings.
+ * Model for a single bicycle parking location.
  */
+
 var BikeParkingModel = Backbone.Model.extend();
 
+
+/*
+ * Collection of BikeParkingModel objects
+ */
+ 
 var BikeParkingsCollection = Backbone.Collection.extend({
-    model: BikeParkingModel
+  model : BikeParkingModel
 });

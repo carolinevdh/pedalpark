@@ -1,10 +1,13 @@
 /*
- * View for Google Maps map
+ * View for Google Maps map.
  */
+
 var MapView = Backbone.View.extend({
+
 	el : $('#map-canvas'),
-	initialize: function(){
-		_.bindAll(this,'renderLocations','renderForPath');
+
+	initialize: function() {
+		_.bindAll(this, 'renderLocations', 'renderForPath');
 
 		//create map on window
 		map = this.getNewMap({});
@@ -18,17 +21,20 @@ var MapView = Backbone.View.extend({
 		function calculateCenter() {
 			center = map.getCenter();
 		}
-		google.maps.event.addDomListener(map, 'idle', function() {
+		google.maps.event.addDomListener(map, 'idle', function doCalculateCenter() {
 			calculateCenter();
 		});
-		google.maps.event.addDomListener(window, 'resize', function() {
+		google.maps.event.addDomListener(window, 'resize', function doCenter() {
 			map.setCenter(center);
-			if(!bounds.isEmpty()) map.fitBounds(bounds);
+			if (!bounds.isEmpty()) map.fitBounds(bounds);
 		});
 	},
 
-	/* Returns a new Map object with BicyclingLayer */
-	getNewMap: function(options){
+	/* 
+	 * Returns a new Map object with BicyclingLayer.
+	 * @param <google.maps.MapOptions> options
+	 */
+	getNewMap: function(options) {
 		//create map object
 		var map = new google.maps.Map(this.el, options);
 
@@ -39,12 +45,18 @@ var MapView = Backbone.View.extend({
 		return map;
 	},
 
-	/* Redraws map with markers */
-	renderLocations: function(doMarkLocation, lat, long, parkinglocations){
+	/* 
+   * Redraws map with markers.
+   * @param <Boolean> doMarkLocation Does the special location need to be drawn?
+   * @param <Float> lat Latitude of special location
+   * @param <Float> long Longitude of special location
+   * @param <Array<BikeParkingModel>> locations
+   */
+	renderLocations: function(doMarkLocation, lat, long, parkinglocations) {
 		bounds = new google.maps.LatLngBounds();
 
 		//if a special location needs to be marked
-		if(doMarkLocation){
+		if (doMarkLocation) {
 			//prepare and mark special location
 			var mainLatLng = new google.maps.LatLng(lat, long);
 			var currentMarker = new google.maps.Marker({
@@ -58,7 +70,7 @@ var MapView = Backbone.View.extend({
 
 		//render all parkinglocations
 		var nLocations = parkinglocations.length;
-		for ( i = 0; i < nLocations; i++ ){
+		for (i = 0; i < nLocations; i++) {
 			var latLng = new google.maps.LatLng(
 					parkinglocations[i].get('coordinates').latitude,
 					parkinglocations[i].get('coordinates').longitude);
@@ -76,16 +88,24 @@ var MapView = Backbone.View.extend({
 		map.fitBounds(bounds);
 	},
 
-	/* Redraws map with a view of the world, used as loading screen and in certain fault cases */
-	renderWorld: function(){
+	/* 
+	 * Redraws map with a view of the world, 
+	 * used as loading screen and in certain error cases.
+	 */
+	renderWorld: function() {
 		map = this.getNewMap({
-			zoom: 1,
-			center: new google.maps.LatLng(0,0)
+			zoom : 1,
+			center : new google.maps.LatLng(0,0)
 		});
 	},
 
-	/* Redraws map with a path between marked locations origin and destination */
-	renderForPath: function(origin, destination, renderer){
+	/* 
+	 * Redraws map with a path between marked locations origin and destination.
+	 * @param <Array<Float>> origin
+   * @param <Array<Float>> destination
+   * @param <google.maps.DirectionsRenderer> renderer
+	 */
+	renderForPath: function(origin, destination, renderer) {
 		map = this.getNewMap({});
 		bounds = new google.maps.LatLngBounds();
 
@@ -113,32 +133,46 @@ var MapView = Backbone.View.extend({
 		renderer.setMap(map);
 	},
 
-	/* Removes path and markers */
-	clearOverlays: function(renderer){
+	/* 
+	 * Removes path and markers.
+	 * @param <google.maps.DirectionsRenderer> renderer
+	 */
+	clearOverlays: function(renderer) {
 		if(renderer !== undefined) renderer.setMap(null);
 		this.removeMarkers();
 	},
 
-	/* Removes map from all markers */
-	removeMarkers: function(){
-		for(var i = 0; i < this.markers.length; i++)
+	/* 
+	 * Removes map from all markers.
+	 */
+	removeMarkers: function() {
+		for(var i = 0; i < this.markers.length; i++){
 			this.markers[i].setMap(null);
+		}
 		this.markers.length = 0;
 	},
 
-	/* Returns url for starting marker icon */
-	getStartMarkerIcon: function(){
+	/* 
+	 * Returns url for starting marker icon.
+	 */
+	getStartMarkerIcon: function() {
 		return 'static/img/marker-cyclist.png';
 	},
 
-	/* Returns url for a parking marker icon, based on proximity to location */
-	getParkingMarkerIcon: function(size, index){
+	/* 
+	 * Returns url for a parking marker icon, based on proximity to location.
+	 * @param <Integer> size Total of parkings in proximity ranking
+	 * @param <Integer> index Indicating proximity to location
+	 */
+	getParkingMarkerIcon: function(size, index) {
 		if (size < 10) return 'static/img/marker-parking-' + index + '.png';
 		else return this.getDefaultParkingMarkerIcon();
 	},
 
-	/* Returns url for standard parking marker icon */
-	getDefaultParkingMarkerIcon: function(){
+	/* 
+	 * Returns url for standard parking marker icon.
+	 */
+	getDefaultParkingMarkerIcon: function() {
 		return 'static/img/marker-parking.png';
 	}
 });

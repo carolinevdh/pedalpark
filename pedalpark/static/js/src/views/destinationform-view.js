@@ -1,30 +1,38 @@
 /*
- * View rendering input box and submit button, allowing user to pick a location by address
+ * View rendering input box and submit button, 
+ * allowing user to pick a location by typing an address.
  */
+
 var DestinationView = Backbone.View.extend({
-    el : $('#destinationform'),
 
-    /* Catches submission of form */
-    events: {'submit form#frm-destination': 'setDestination'},
+  el : $('#destinationform'),
 
-    initialize: function(){
-        _.bindAll(this,'render','setDestination');
-        this.template = _.template($('#destinationform-template').html());
-    },
+  /* Catches submission of form */
+  events: { 'submit form#frm-destination' : 'setDestination' },
 
-    render: function(){
-        this.$el.html(this.template());
-    },
+  initialize: function() {
+    _.bindAll(this, 'render', 'setDestination');
+    this.template = _.template($('#destinationform-template').html());
+  },
 
-    /* Empties input box */
-    clear: function(){
-        $('#destination').val('');
-    },
+  render: function() {
+    this.$el.html(this.template());
+  },
 
-    /* Reads input address and populates DestinationModel accordingly */
-    setDestination: function(event){
-        event.preventDefault();
-        var destination = $('#destination').val();
-        this.model.set('address',destination);
-    }
+  /* 
+   * Empties its input box.
+   */
+  clear: function() {
+    $('#destination').val('');
+  },
+
+  /* 
+   * Reads input address and populates DestinationModel accordingly.
+   * @param <Event> event Submission of form event
+   */
+  setDestination: function(event) {
+    event.preventDefault();
+    var destination = $('#destination').val();
+    this.model.set('address',destination);
+  }
 });

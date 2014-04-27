@@ -21,15 +21,17 @@ require.config({
 		pedalpark : {
 			deps : ['backbone','foundation']
 		}
-	}
-
+	},
+	waitSeconds: 30
 });
 
+//load Google Maps API asynchronously
 define('gmaps', ['async!http://maps.googleapis.com/maps/api/js?sensor=false'], function() {
     return google.maps;
 });
 
-define(['jquery', 'underscore', 'backbone', 'foundation', 'pedalpark','gmaps'], function() {
+//load other dependencies before starting Foundation and PedalPark
+define(['jquery', 'underscore', 'backbone', 'foundation','gmaps','pedalpark',], function() {
     $(document).foundation({});
     $(document).ready(function() {
         window.App = new PedalParkApp({ appendTo: $('body') });

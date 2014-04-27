@@ -1,8 +1,10 @@
 /*
- * Fetches the amount of known and installed bike parkings.
+ * Calls '/size' on Python backend,
+ * fetching the amount of known and installed bicycle parkings.
  */
+ 
 var SizeModel = Backbone.Model.extend({
-    url: function(){
-        return '/size';
-    }
+  url: function() {
+    return '/size';
+  }
 });

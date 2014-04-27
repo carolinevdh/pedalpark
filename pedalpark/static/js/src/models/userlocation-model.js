@@ -1,41 +1,55 @@
 /*
  * Calculates and retains the user's current location 
  */
+
 var UserLocationModel = Backbone.Model.extend({
-	initialize: function() {
-		_.bindAll(this,'updateLocation','positionSuccess','positionFailure');
-		this.updateLocation();
-	},
+  initialize: function() {
+    _.bindAll(this, 'updateLocation', 'positionSuccess', 'positionFailure');
 
-	/* Attempt to get current location from HTML5 Geolocation API */
-	updateLocation: function() {
-		if(!FAKE_SF_LOCATION){
-			if(navigator.geolocation)
-				navigator.geolocation.getCurrentPosition(this.positionSuccess, this.positionFailure);
-		}else{
-			this.set({
-				success: true,
-				latitude : SF_LOCATION_LAT,
-				longitude : SF_LOCATION_LONG
-			});
-			console.log('Set fake position at (' + this.get('latitude') + ", " + this.get('longitude') + ').');
-		}
-	},
+    this.updateLocation();
+  },
 
-	/* When the current location is succesfully calculated, populate the Model */
-	positionSuccess: function(position) {
-		this.set({
-			success : true,
-			latitude : position.coords.latitude,
-			longitude : position.coords.longitude
-		});
-		console.log('Acquired position: (' + this.get('latitude') + ", " + this.get('longitude') + ').');
-	},
+  /* 
+   * Set current location as received from HTML5 Geocoding API,
+   * or development time global variables.
+   */
+  updateLocation: function() {
+    if (!FAKE_SF_LOCATION) {
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+          this.positionSuccess,
+          this.positionFailure
+        );
+      }
+    } else {
+      this.set({
+        success: true,
+        latitude : SF_LOCATION_LAT,
+        longitude : SF_LOCATION_LONG
+      });
+    }
+  },
 
-	/* When the current location could not be found, populate the Model accordingly */
-	positionFailure: function() {
-		this.set({
-			success : false
-		});
-	}
+  /*
+   * When the current location has been found,
+   * populate this model with received position coordinates.
+   * @param <Position> position
+   */
+  positionSuccess: function(position) {
+    this.set({
+      success : true,
+      latitude : position.coords.latitude,
+      longitude : position.coords.longitude
+    });
+  },
+
+  /* 
+   * When the current location could not be found,
+   * populate this model with success state.
+   */
+  positionFailure: function() {
+    this.set({
+      success : false
+    });
+  }
 });

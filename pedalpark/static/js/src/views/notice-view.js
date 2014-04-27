@@ -1,7 +1,9 @@
 /*
- * Simple View rendering greetings and application messages for user
+ * Simple View rendering greetings and application messages to user
  */
+
 var NoticeView = Backbone.View.extend({
+  
     el : $('#notice'),
 
     initialize: function(){
