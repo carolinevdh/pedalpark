@@ -857,6 +857,7 @@ var ParkingRouter = Backbone.Router.extend({
   manualParkingFetchSuccess: function(model) {
     //display an error with address if the backend didn't understand it
     if (!model.get('success')) {
+      this.bikeParkingsCollection.reset();
       this.addressGeocodeError(this.destinationModel.get('address'));
     } else {
       this.noticeView.render(
